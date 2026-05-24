@@ -17,7 +17,7 @@ app.get('/api/payouts', async (req, res) => {
   try {
     const accountsRes = await fetch('https://api.mercury.com/api/v1/accounts', {
       headers: {
-        'Authorization': `api-key ${apiKey}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       }
     });
@@ -40,7 +40,7 @@ app.get('/api/payouts', async (req, res) => {
         `https://api.mercury.com/api/v1/account/${account.id}/transactions?start=${desdeStr}&limit=500`,
         {
           headers: {
-            'Authorization': `api-key ${apiKey}`,
+            'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json'
           }
         }
@@ -73,7 +73,6 @@ app.get('/api/payouts', async (req, res) => {
     }
 
     todosLosPayouts.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-
     res.json({ payouts: todosLosPayouts, total: todosLosPayouts.length });
 
   } catch (err) {
