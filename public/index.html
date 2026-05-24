@@ -1109,39 +1109,33 @@ function updateImportBtn() {
 
 function importarSeleccionados() {
   const checkboxes = document.querySelectorAll('#mercury-items input[type=checkbox]:checked');
-  const mes = document.getElementById('nombre-mes').value || 'Sin especificar';
+  if (checkboxes.length === 0) return;
 
+  // Sumar todos los montos seleccionados
+  let totalMonto = 0;
+  let fechas = [];
   checkboxes.forEach(chk => {
     const payout = mercuryPayouts.find(p => p.id === chk.dataset.id);
     if (!payout) return;
-
-    const monto = payout.monto;
+    totalMonto += payout.monto;
     const fecha = new Date(payout.fecha).toLocaleDateString('es-PR', { month: 'short', day: 'numeric', year: 'numeric' });
-
-    const distribs = CATEGORIAS_DEFAULT.map((cat, i) => {
-      const pct = parseFloat(document.getElementById('pct-' + i).value) || 0;
-      return { nombre: cat.nombre, pct, monto: monto * (pct / 100) };
-    });
-
-    const item = { monto, fecha, mes, distribs, descripcion: payout.descripcion, timestamp: Date.now() };
-    histDist.unshift(item);
-    renderHistDist(item);
-
-    // Acumular en línea de crédito
-    acumPayoutsSemana += monto;
-    document.getElementById('linea-payouts').value = acumPayoutsSemana.toFixed(2);
-    updatePayoutBadge();
-    calcLinea();
+    fechas.push(fecha);
   });
 
-  saveAll();
-  updateResumen();
+  // Poblar el campo de monto y calcular la tabla
+  document.getElementById('payout-monto').value = totalMonto.toFixed(2);
+  const fechaStr = fechas[0] || new Date().toISOString().split('T')[0];
+  document.getElementById('payout-fecha').value = new Date().toISOString().split('T')[0];
+  calcDist();
 
-  // Reset Mercury UI
+  // Scroll a la tabla para que la vea
+  document.getElementById('dist-table').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  // Cerrar el panel de Mercury
   document.getElementById('mercury-payouts-list').style.display = 'none';
   document.getElementById('sync-status').style.background = 'rgba(29,158,117,0.1)';
   document.getElementById('sync-status').style.color = 'var(--green)';
-  document.getElementById('sync-status').textContent = `✓ ${checkboxes.length} payout(s) registrados correctamente.`;
+  document.getElementById('sync-status').textContent = `✓ ${checkboxes.length} payout(s) cargados — monto $${totalMonto.toFixed(2)}. Revisa la tabla y haz clic en Registrar.`;
 }
 
 
