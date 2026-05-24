@@ -577,6 +577,7 @@ let lineaSemana = 1;
 let histDist  = [];
 let histLinea = [];
 let acumPayoutsSemana = 0;
+let payoutsUsados = []; // IDs de payouts ya registrados
 
 // =============================================
 // TABS
@@ -961,7 +962,7 @@ function saveAll() {
   try {
     localStorage.setItem('enziendela_dash_v1', JSON.stringify({
       histDist, histLinea, lineaPagado, lineaSemana,
-      TASA_VELA, TASA_ENC, DEUDA_TOTAL, acumPayoutsSemana
+      TASA_VELA, TASA_ENC, DEUDA_TOTAL, acumPayoutsSemana, payoutsUsados
     }));
   } catch(e) {}
 }
@@ -982,6 +983,9 @@ function loadAll() {
       acumPayoutsSemana = data.acumPayoutsSemana;
       document.getElementById('linea-payouts').value = acumPayoutsSemana > 0 ? acumPayoutsSemana.toFixed(2) : '';
       updatePayoutBadge();
+    }
+    if (data.payoutsUsados) {
+      payoutsUsados = data.payoutsUsados;
     }
     document.getElementById('cfg-pagado').value = lineaPagado;
 
@@ -1048,11 +1052,20 @@ async function syncMercury() {
 }
 
 function renderMercuryPayouts() {
-  const list     = document.getElementById('mercury-payouts-list');
-  const items    = document.getElementById('mercury-items');
-  const btnImp   = document.getElementById('btn-import-selected');
+  const list   = document.getElementById('mercury-payouts-list');
+  const items  = document.getElementById('mercury-items');
+  const btnImp = document.getElementById('btn-import-selected');
   list.style.display = 'block';
   items.innerHTML = '';
+
+  // Botones seleccionar / deseleccionar todo
+  const selBtns = document.createElement('div');
+  selBtns.style.cssText = 'display:flex;gap:8px;margin-bottom:10px;';
+  selBtns.innerHTML = `
+    <button onclick="toggleTodos(true)" style="background:transparent;border:1px solid var(--green);color:var(--green);border-radius:6px;padding:4px 12px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;">Seleccionar todo</button>
+    <button onclick="toggleTodos(false)" style="background:transparent;border:1px solid var(--border);color:var(--gray);border-radius:6px;padding:4px 12px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;">Deseleccionar todo</button>
+  `;
+  items.appendChild(selBtns);
 
   // Agrupar por fecha
   const porFecha = {};
@@ -1073,29 +1086,44 @@ function renderMercuryPayouts() {
     dayEl.appendChild(header);
 
     payouts.forEach(p => {
+      const yaUsado = payoutsUsados.includes(p.id);
       const row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:6px;background:var(--navy);margin-bottom:3px;cursor:pointer;';
+      row.style.cssText = `display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:6px;background:${yaUsado ? 'rgba(29,158,117,0.05)' : 'var(--navy)'};margin-bottom:3px;cursor:pointer;${yaUsado ? 'border:1px solid rgba(29,158,117,0.2);' : ''}`;
       row.innerHTML = `
-        <input type="checkbox" id="mp-${p.id}" value="${p.monto}" data-id="${p.id}" style="width:14px;height:14px;accent-color:var(--green);cursor:pointer;" checked onchange="updateImportBtn()" />
+        <input type="checkbox" id="mp-${p.id}" value="${p.monto}" data-id="${p.id}" 
+          style="width:14px;height:14px;accent-color:var(--green);cursor:pointer;" 
+          ${yaUsado ? '' : 'checked'} 
+          onchange="updateImportBtn()" />
         <div style="flex:1;">
-          <div style="font-size:11px;color:var(--white);">${p.descripcion}</div>
+          <div style="font-size:11px;color:${yaUsado ? 'var(--gray)' : 'var(--white)'};">${p.descripcion} ${yaUsado ? '<span style="font-size:9px;color:var(--green);margin-left:4px;">✓ ya registrado</span>' : ''}</div>
           <div style="font-size:9px;color:var(--gray);">${p.metodo} · ${p.cuenta}</div>
         </div>
-        <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--green);">$${p.monto.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:${yaUsado ? 'var(--gray)' : 'var(--green)'};">$${p.monto.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
       `;
-      row.onclick = (e) => {
-        if (e.target.type !== 'checkbox') {
-          const chk = row.querySelector('input');
-          chk.checked = !chk.checked;
-          updateImportBtn();
-        }
-      };
+      if (!yaUsado) {
+        row.onclick = (e) => {
+          if (e.target.type !== 'checkbox') {
+            const chk = row.querySelector('input');
+            chk.checked = !chk.checked;
+            updateImportBtn();
+          }
+        };
+      }
       dayEl.appendChild(row);
     });
     items.appendChild(dayEl);
   });
 
   btnImp.style.display = 'block';
+  updateImportBtn();
+}
+
+function toggleTodos(seleccionar) {
+  document.querySelectorAll('#mercury-items input[type=checkbox]').forEach(chk => {
+    // No seleccionar los ya usados
+    const id = chk.dataset.id;
+    if (!payoutsUsados.includes(id)) chk.checked = seleccionar;
+  });
   updateImportBtn();
 }
 
