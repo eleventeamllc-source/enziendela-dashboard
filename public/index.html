@@ -262,6 +262,30 @@
     </div>
 
     <!-- HISTORIAL DIST -->
+
+  <!-- MERCURY SYNC -->
+  <div class="card" id="mercury-card" style="border-color:rgba(29,158,117,0.4);">
+    <div class="sec-title" style="color:var(--green);">Sincronizar con Mercury</div>
+    <div style="font-size:11px;color:var(--gray);margin-bottom:1rem;line-height:1.7;">
+      Carga automáticamente los payouts de Shopify y BPPR de los últimos 30 días desde tu cuenta de Mercury.
+    </div>
+    <button class="btn" id="btn-sync" onclick="syncMercury()" style="background:var(--green);margin-bottom:0;">
+      Cargar payouts de Mercury
+    </button>
+    <div id="sync-status" style="display:none;margin-top:0.75rem;padding:0.75rem;border-radius:8px;font-size:11px;"></div>
+
+    <!-- Lista de payouts de Mercury -->
+    <div id="mercury-payouts-list" style="display:none;margin-top:1rem;">
+      <div style="font-size:9px;color:var(--gray);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">
+        Payouts encontrados — selecciona los que quieres registrar
+      </div>
+      <div id="mercury-items"></div>
+      <button class="btn" id="btn-import-selected" onclick="importarSeleccionados()" style="margin-top:0.75rem;display:none;">
+        Registrar seleccionados
+      </button>
+    </div>
+  </div>
+
     <div class="sec-title">Historial de payouts</div>
     <div id="hist-dist">
       <div class="hist-empty">Aún no hay payouts registrados.</div>
@@ -979,6 +1003,148 @@ calcLinea();
 // Set today's date
 const hoy = new Date().toISOString().split('T')[0];
 document.getElementById('payout-fecha').value = hoy;
+
+// =============================================
+// MERCURY API SYNC
+// =============================================
+let mercuryPayouts = [];
+
+async function syncMercury() {
+  const btn    = document.getElementById('btn-sync');
+  const status = document.getElementById('sync-status');
+  btn.disabled = true;
+  btn.textContent = 'Cargando...';
+  status.style.display = 'block';
+  status.style.background = 'rgba(201,168,76,0.1)';
+  status.style.color = 'var(--gold-light)';
+  status.textContent = 'Conectando con Mercury...';
+
+  try {
+    const res  = await fetch('/api/payouts');
+    const data = await res.json();
+
+    if (data.error) throw new Error(data.error);
+
+    mercuryPayouts = data.payouts || [];
+
+    if (mercuryPayouts.length === 0) {
+      status.style.background = 'rgba(239,159,39,0.1)';
+      status.style.color = 'var(--amber)';
+      status.textContent = 'No se encontraron payouts de Shopify/BPPR en los últimos 30 días.';
+    } else {
+      status.style.background = 'rgba(29,158,117,0.1)';
+      status.style.color = 'var(--green)';
+      status.textContent = `✓ ${mercuryPayouts.length} payouts encontrados. Selecciona los que quieres registrar.`;
+      renderMercuryPayouts();
+    }
+  } catch(err) {
+    status.style.background = 'rgba(226,75,74,0.1)';
+    status.style.color = 'var(--red)';
+    status.textContent = 'Error: ' + err.message;
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Cargar payouts de Mercury';
+}
+
+function renderMercuryPayouts() {
+  const list     = document.getElementById('mercury-payouts-list');
+  const items    = document.getElementById('mercury-items');
+  const btnImp   = document.getElementById('btn-import-selected');
+  list.style.display = 'block';
+  items.innerHTML = '';
+
+  // Agrupar por fecha
+  const porFecha = {};
+  mercuryPayouts.forEach(p => {
+    const fecha = new Date(p.fecha).toLocaleDateString('es-PR', { month: 'short', day: 'numeric', year: 'numeric' });
+    if (!porFecha[fecha]) porFecha[fecha] = [];
+    porFecha[fecha].push(p);
+  });
+
+  Object.entries(porFecha).forEach(([fecha, payouts]) => {
+    const dayTotal = payouts.reduce((s, p) => s + p.monto, 0);
+    const dayEl = document.createElement('div');
+    dayEl.style.cssText = 'margin-bottom:8px;';
+
+    const header = document.createElement('div');
+    header.style.cssText = 'font-size:10px;color:var(--gray);letter-spacing:0.05em;padding:4px 0;border-bottom:0.5px solid var(--border);margin-bottom:4px;display:flex;justify-content:space-between;';
+    header.innerHTML = `<span>${fecha}</span><span style="color:var(--gold-light);">Total: $${dayTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>`;
+    dayEl.appendChild(header);
+
+    payouts.forEach(p => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:6px;background:var(--navy);margin-bottom:3px;cursor:pointer;';
+      row.innerHTML = `
+        <input type="checkbox" id="mp-${p.id}" value="${p.monto}" data-id="${p.id}" style="width:14px;height:14px;accent-color:var(--green);cursor:pointer;" checked onchange="updateImportBtn()" />
+        <div style="flex:1;">
+          <div style="font-size:11px;color:var(--white);">${p.descripcion}</div>
+          <div style="font-size:9px;color:var(--gray);">${p.metodo} · ${p.cuenta}</div>
+        </div>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--green);">$${p.monto.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+      `;
+      row.onclick = (e) => {
+        if (e.target.type !== 'checkbox') {
+          const chk = row.querySelector('input');
+          chk.checked = !chk.checked;
+          updateImportBtn();
+        }
+      };
+      dayEl.appendChild(row);
+    });
+    items.appendChild(dayEl);
+  });
+
+  btnImp.style.display = 'block';
+  updateImportBtn();
+}
+
+function updateImportBtn() {
+  const checkboxes = document.querySelectorAll('#mercury-items input[type=checkbox]:checked');
+  const total = Array.from(checkboxes).reduce((s, c) => s + parseFloat(c.value), 0);
+  const btn = document.getElementById('btn-import-selected');
+  btn.textContent = `Registrar ${checkboxes.length} payout(s) seleccionados — Total $${total.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+  btn.disabled = checkboxes.length === 0;
+}
+
+function importarSeleccionados() {
+  const checkboxes = document.querySelectorAll('#mercury-items input[type=checkbox]:checked');
+  const mes = document.getElementById('nombre-mes').value || 'Sin especificar';
+
+  checkboxes.forEach(chk => {
+    const payout = mercuryPayouts.find(p => p.id === chk.dataset.id);
+    if (!payout) return;
+
+    const monto = payout.monto;
+    const fecha = new Date(payout.fecha).toLocaleDateString('es-PR', { month: 'short', day: 'numeric', year: 'numeric' });
+
+    const distribs = CATEGORIAS_DEFAULT.map((cat, i) => {
+      const pct = parseFloat(document.getElementById('pct-' + i).value) || 0;
+      return { nombre: cat.nombre, pct, monto: monto * (pct / 100) };
+    });
+
+    const item = { monto, fecha, mes, distribs, descripcion: payout.descripcion, timestamp: Date.now() };
+    histDist.unshift(item);
+    renderHistDist(item);
+
+    // Acumular en línea de crédito
+    acumPayoutsSemana += monto;
+    document.getElementById('linea-payouts').value = acumPayoutsSemana.toFixed(2);
+    updatePayoutBadge();
+    calcLinea();
+  });
+
+  saveAll();
+  updateResumen();
+
+  // Reset Mercury UI
+  document.getElementById('mercury-payouts-list').style.display = 'none';
+  document.getElementById('sync-status').style.background = 'rgba(29,158,117,0.1)';
+  document.getElementById('sync-status').style.color = 'var(--green)';
+  document.getElementById('sync-status').textContent = `✓ ${checkboxes.length} payout(s) registrados correctamente.`;
+}
+
+
 </script>
 </body>
 </html>
