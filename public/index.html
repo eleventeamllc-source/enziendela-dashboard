@@ -267,22 +267,19 @@
   <div class="card" id="mercury-card" style="border-color:rgba(29,158,117,0.4);">
     <div class="sec-title" style="color:var(--green);">Sincronizar con Mercury</div>
     <div style="font-size:11px;color:var(--gray);margin-bottom:1rem;line-height:1.7;">
-      Carga automáticamente los payouts de Shopify y BPPR de los últimos 30 días desde tu cuenta de Mercury.
+      Carga el balance actual de tu cuenta de Mercury. El monto ya refleja el IVU descontado automáticamente.
     </div>
     <button class="btn" id="btn-sync" onclick="syncMercury()" style="background:var(--green);margin-bottom:0;">
-      Cargar payouts de Mercury
+      Cargar balance de Mercury
     </button>
     <div id="sync-status" style="display:none;margin-top:0.75rem;padding:0.75rem;border-radius:8px;font-size:11px;"></div>
 
-    <!-- Lista de payouts de Mercury -->
-    <div id="mercury-payouts-list" style="display:none;margin-top:1rem;">
+    <!-- Balance de Mercury -->
+    <div id="mercury-balance-list" style="display:none;margin-top:1rem;">
       <div style="font-size:9px;color:var(--gray);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">
-        Payouts encontrados — selecciona los que quieres registrar
+        Balance disponible en Mercury — ingresa el monto que quieres distribuir
       </div>
-      <div id="mercury-items"></div>
-      <button class="btn" id="btn-import-selected" onclick="importarSeleccionados()" style="margin-top:0.75rem;display:none;">
-        Registrar seleccionados
-      </button>
+      <div id="mercury-balance-items"></div>
     </div>
   </div>
 
@@ -1024,22 +1021,22 @@ async function syncMercury() {
   status.textContent = 'Conectando con Mercury...';
 
   try {
-    const res  = await fetch('/api/payouts');
+    const res  = await fetch('/api/balance');
     const data = await res.json();
 
     if (data.error) throw new Error(data.error);
 
-    mercuryPayouts = data.payouts || [];
+    const cuentas = data.cuentas || [];
 
-    if (mercuryPayouts.length === 0) {
+    if (cuentas.length === 0) {
       status.style.background = 'rgba(239,159,39,0.1)';
       status.style.color = 'var(--amber)';
-      status.textContent = 'No se encontraron payouts de Shopify/BPPR en los últimos 30 días.';
+      status.textContent = 'No se encontraron cuentas en Mercury.';
     } else {
       status.style.background = 'rgba(29,158,117,0.1)';
       status.style.color = 'var(--green)';
-      status.textContent = `✓ ${mercuryPayouts.length} payouts encontrados. Selecciona los que quieres registrar.`;
-      renderMercuryPayouts();
+      status.textContent = '✓ Balance cargado. Ingresa el monto que quieres distribuir.';
+      renderMercuryBalance(cuentas);
     }
   } catch(err) {
     status.style.background = 'rgba(226,75,74,0.1)';
@@ -1048,7 +1045,65 @@ async function syncMercury() {
   }
 
   btn.disabled = false;
-  btn.textContent = 'Cargar payouts de Mercury';
+  btn.textContent = 'Cargar balance de Mercury';
+}
+
+function renderMercuryBalance(cuentas) {
+  const list  = document.getElementById('mercury-balance-list');
+  const items = document.getElementById('mercury-balance-items');
+  list.style.display = 'block';
+  items.innerHTML = '';
+
+  cuentas.forEach(cuenta => {
+    const el = document.createElement('div');
+    el.style.cssText = 'background:var(--navy);border-radius:8px;padding:14px 16px;margin-bottom:8px;';
+    el.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div>
+          <div style="font-size:12px;color:var(--white);font-weight:500;">${cuenta.nombre}</div>
+          <div style="font-size:9px;color:var(--gray);margin-top:2px;text-transform:uppercase;letter-spacing:0.05em;">${cuenta.tipo}</div>
+        </div>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.6rem;color:var(--green);">
+          $${cuenta.balance.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div style="flex:1;">
+          <label style="font-size:9px;color:var(--gray);letter-spacing:0.08em;text-transform:uppercase;display:block;margin-bottom:4px;">Monto a distribuir</label>
+          <input type="number" id="dist-monto-${cuenta.id}" 
+            placeholder="0.00" 
+            value="${cuenta.balance.toFixed(2)}"
+            min="0" max="${cuenta.balance}" step="0.01"
+            style="width:100%;background:var(--navy-mid);border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-family:'DM Mono',monospace;font-size:1rem;color:var(--white);outline:none;-moz-appearance:textfield;"
+          />
+        </div>
+        <button onclick="usarBalanceMercury('${cuenta.id}', ${cuenta.balance})" 
+          style="background:var(--gold);color:var(--navy);border:none;border-radius:6px;padding:8px 16px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;white-space:nowrap;margin-top:18px;">
+          Usar este monto →
+        </button>
+      </div>
+    `;
+    items.appendChild(el);
+  });
+}
+
+function usarBalanceMercury(cuentaId, balanceTotal) {
+  const input = document.getElementById('dist-monto-' + cuentaId);
+  const monto = parseFloat(input.value) || 0;
+  if (monto <= 0) return;
+
+  // Poblar campo de distribución y calcular tabla
+  document.getElementById('payout-monto').value = monto.toFixed(2);
+  document.getElementById('payout-fecha').value = new Date().toISOString().split('T')[0];
+  calcDist();
+
+  // Scroll a la tabla
+  document.getElementById('dist-table').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  // Actualizar status
+  document.getElementById('sync-status').textContent = 
+    `✓ Monto $${monto.toFixed(2)} cargado desde Mercury. Revisa la tabla y haz clic en Registrar.`;
+  document.getElementById('mercury-balance-list').style.display = 'none';
 }
 
 function renderMercuryPayouts() {
