@@ -665,7 +665,16 @@ function setModo(modo) {
   buildDistTable();
 }
 
+// Guardar porcentajes actuales antes de reconstruir
+let pctGuardados = CATEGORIAS_DEFAULT.map(c => c.pct);
+
 function buildDistTable() {
+  // Guardar porcentajes actuales si existen en el DOM
+  CATEGORIAS_DEFAULT.forEach((_, i) => {
+    const input = document.getElementById('pct-' + i);
+    if (input) pctGuardados[i] = parseFloat(input.value) || CATEGORIAS_DEFAULT[i].pct;
+  });
+
   const tbody = document.getElementById('dist-body');
   tbody.innerHTML = '';
   CATEGORIAS_DEFAULT.forEach((cat, i) => {
@@ -673,7 +682,7 @@ function buildDistTable() {
     if (modoActual === 'auto') {
       tr.innerHTML = `
         <td>${cat.nombre}</td>
-        <td><input class="pct-input" type="number" id="pct-${i}" value="${cat.pct}" min="0" max="100" oninput="calcDist()" /></td>
+        <td><input class="pct-input" type="number" id="pct-${i}" value="${pctGuardados[i]}" min="0" max="100" oninput="calcDist()" /></td>
         <td id="monto-${i}">$0.00</td>
         <td>
           <div class="check-wrap">
