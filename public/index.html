@@ -229,11 +229,27 @@
       </div>
 
       <!-- TABLA DE DISTRIBUCIÓN -->
+      <!-- MODO TOGGLE -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;">
+        <span style="font-size:9px;color:var(--gray);letter-spacing:0.08em;text-transform:uppercase;">Modo:</span>
+        <div style="display:flex;background:var(--navy);border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+          <button id="btn-modo-auto" onclick="setModo('auto')" 
+            style="padding:5px 14px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.08em;text-transform:uppercase;border:none;cursor:pointer;background:var(--gold);color:var(--navy);">
+            % Automático
+          </button>
+          <button id="btn-modo-manual" onclick="setModo('manual')"
+            style="padding:5px 14px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.08em;text-transform:uppercase;border:none;cursor:pointer;background:transparent;color:var(--gray);">
+            Manual
+          </button>
+        </div>
+        <span id="modo-hint" style="font-size:9px;color:var(--gray);">Los montos se calculan según el %</span>
+      </div>
+
       <table class="dist-table" id="dist-table">
         <thead>
           <tr>
             <th>Categoría</th>
-            <th>% </th>
+            <th id="th-pct">% </th>
             <th>Monto asignado</th>
             <th>Pagado</th>
           </tr>
@@ -249,6 +265,17 @@
           </tr>
         </tfoot>
       </table>
+      
+      <!-- Indicador modo manual -->
+      <div id="manual-indicator" style="display:none;background:rgba(239,159,39,0.1);border:1px solid rgba(239,159,39,0.3);border-radius:8px;padding:8px 12px;margin-bottom:1rem;font-size:11px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="color:var(--amber);">Asignado manualmente: <strong id="manual-asignado">$0.00</strong></span>
+          <span id="manual-restante" style="color:var(--gray);">Disponible: $0.00</span>
+        </div>
+        <div id="manual-barra-track" style="height:4px;background:var(--navy-soft);border-radius:2px;margin-top:6px;overflow:hidden;">
+          <div id="manual-barra-fill" style="height:100%;background:var(--amber);border-radius:2px;width:0%;transition:width 0.3s;"></div>
+        </div>
+      </div>
 
       <div class="main-result active" style="margin-top:0;">
         <div class="main-label">Total distribuido este payout</div>
@@ -600,24 +627,102 @@ function today() {
 // =============================================
 // TAB 1: DISTRIBUCIÓN
 // =============================================
+let modoActual = 'auto';
+
+function setModo(modo) {
+  modoActual = modo;
+  const btnAuto   = document.getElementById('btn-modo-auto');
+  const btnManual = document.getElementById('btn-modo-manual');
+  const hint      = document.getElementById('modo-hint');
+  const indicator = document.getElementById('manual-indicator');
+  const thPct     = document.getElementById('th-pct');
+
+  if (modo === 'auto') {
+    btnAuto.style.background   = 'var(--gold)';
+    btnAuto.style.color        = 'var(--navy)';
+    btnManual.style.background = 'transparent';
+    btnManual.style.color      = 'var(--gray)';
+    hint.textContent = 'Los montos se calculan según el %';
+    indicator.style.display = 'none';
+    thPct.style.display = '';
+    // Recalcular con %
+    calcDist();
+  } else {
+    btnManual.style.background = 'var(--gold)';
+    btnManual.style.color      = 'var(--navy)';
+    btnAuto.style.background   = 'transparent';
+    btnAuto.style.color        = 'var(--gray)';
+    hint.textContent = 'Ingresa el monto de cada categoría libremente';
+    indicator.style.display = 'block';
+    thPct.style.display = 'none';
+    // Resetear montos manuales a 0
+    CATEGORIAS_DEFAULT.forEach((_, i) => {
+      const input = document.getElementById('monto-manual-' + i);
+      if (input) input.value = '';
+    });
+    calcManual();
+  }
+  buildDistTable();
+}
+
 function buildDistTable() {
   const tbody = document.getElementById('dist-body');
   tbody.innerHTML = '';
   CATEGORIAS_DEFAULT.forEach((cat, i) => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${cat.nombre}</td>
-      <td><input class="pct-input" type="number" id="pct-${i}" value="${cat.pct}" min="0" max="100" oninput="calcDist()" /></td>
-      <td id="monto-${i}">$0.00</td>
-      <td>
-        <div class="check-wrap">
-          <input type="checkbox" id="chk-${i}" onchange="updateChk(${i})" />
-          <label class="check-label" id="chk-label-${i}" for="chk-${i}">pendiente</label>
-        </div>
-      </td>
-    `;
+    if (modoActual === 'auto') {
+      tr.innerHTML = `
+        <td>${cat.nombre}</td>
+        <td><input class="pct-input" type="number" id="pct-${i}" value="${cat.pct}" min="0" max="100" oninput="calcDist()" /></td>
+        <td id="monto-${i}">$0.00</td>
+        <td>
+          <div class="check-wrap">
+            <input type="checkbox" id="chk-${i}" onchange="updateChk(${i})" />
+            <label class="check-label" id="chk-label-${i}" for="chk-${i}">pendiente</label>
+          </div>
+        </td>
+      `;
+    } else {
+      tr.innerHTML = `
+        <td>${cat.nombre}</td>
+        <td style="display:none;"></td>
+        <td>
+          <input type="number" id="monto-manual-${i}" placeholder="0.00" min="0" step="0.01"
+            style="width:110px;background:var(--navy);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-family:'DM Mono',monospace;font-size:12px;color:var(--white);text-align:right;outline:none;-moz-appearance:textfield;"
+            oninput="calcManual()" />
+        </td>
+        <td>
+          <div class="check-wrap">
+            <input type="checkbox" id="chk-${i}" onchange="updateChk(${i})" />
+            <label class="check-label" id="chk-label-${i}" for="chk-${i}">pendiente</label>
+          </div>
+        </td>
+      `;
+    }
     tbody.appendChild(tr);
   });
+  if (modoActual === 'auto') calcDist();
+  else calcManual();
+}
+
+function calcManual() {
+  const monto = parseFloat(document.getElementById('payout-monto').value) || 0;
+  let totalAsignado = 0;
+  CATEGORIAS_DEFAULT.forEach((_, i) => {
+    const input = document.getElementById('monto-manual-' + i);
+    totalAsignado += parseFloat(input?.value || 0);
+  });
+  const restante = monto - totalAsignado;
+  const pct = monto > 0 ? Math.min((totalAsignado / monto) * 100, 100) : 0;
+
+  document.getElementById('manual-asignado').textContent = fmt(totalAsignado);
+  document.getElementById('manual-restante').textContent = 
+    restante >= 0 ? `Disponible: ${fmt(restante)}` : `⚠ Excedido: ${fmt(Math.abs(restante))}`;
+  document.getElementById('manual-restante').style.color = restante >= 0 ? 'var(--gray)' : 'var(--red)';
+  document.getElementById('manual-barra-fill').style.width = pct + '%';
+  document.getElementById('manual-barra-fill').style.background = restante < 0 ? 'var(--red)' : 'var(--amber)';
+  document.getElementById('total-monto').textContent = fmt(totalAsignado);
+  document.getElementById('btn-dist').disabled = monto <= 0 || totalAsignado <= 0;
 }
 
 function updateChk(i) {
@@ -653,10 +758,19 @@ function registrarDist() {
   const mes    = document.getElementById('nombre-mes').value || 'Sin especificar';
   if (monto <= 0) return;
 
-  const distribs = CATEGORIAS_DEFAULT.map((cat, i) => {
-    const pct  = parseFloat(document.getElementById('pct-' + i).value) || 0;
-    return { nombre: cat.nombre, pct, monto: monto * (pct / 100) };
-  });
+  let distribs;
+  if (modoActual === 'manual') {
+    distribs = CATEGORIAS_DEFAULT.map((cat, i) => {
+      const montoManual = parseFloat(document.getElementById('monto-manual-' + i)?.value) || 0;
+      const pct = monto > 0 ? (montoManual / monto * 100) : 0;
+      return { nombre: cat.nombre, pct: Math.round(pct), monto: montoManual };
+    });
+  } else {
+    distribs = CATEGORIAS_DEFAULT.map((cat, i) => {
+      const pct  = parseFloat(document.getElementById('pct-' + i).value) || 0;
+      return { nombre: cat.nombre, pct, monto: monto * (pct / 100) };
+    });
+  }
 
   const item = { monto, fecha, mes, distribs, timestamp: Date.now() };
   histDist.unshift(item);
