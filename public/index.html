@@ -74,6 +74,8 @@
   .input-group input { width: 100%; background: var(--navy); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; font-family: 'DM Mono', monospace; font-size: 1rem; color: var(--white); text-align: center; outline: none; transition: border-color 0.2s; -moz-appearance: textfield; }
   .input-group input::-webkit-outer-spin-button, .input-group input::-webkit-inner-spin-button { -webkit-appearance: none; }
   .input-group input:focus { border-color: var(--gold); }
+  .fecha-input { width:100%; background:var(--navy); border:1px solid var(--border); border-radius:8px; padding:0.75rem 1rem; font-family:'DM Mono',monospace; font-size:0.9rem; color:var(--white); outline:none; cursor:pointer; color-scheme:dark; }
+  .fecha-input:focus { border-color:var(--gold); }
   .input-hint { font-size: 9px; color: var(--gray); text-align: center; margin-top: 4px; }
 
   /* DIST TABLE */
@@ -480,12 +482,12 @@
       <div class="inputs-row" style="margin-bottom:1.25rem;">
         <div class="input-group">
           <label>Desde</label>
-          <input type="date" id="linea-fecha-desde" style="-moz-appearance:auto;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:0.75rem 1rem;font-family:'DM Mono',monospace;font-size:0.9rem;color:var(--white);outline:none;width:100%;" />
+          <input type="date" id="linea-fecha-desde" class="fecha-input" />
           <div class="input-hint">inicio del período de ventas</div>
         </div>
         <div class="input-group">
           <label>Hasta</label>
-          <input type="date" id="linea-fecha-hasta" style="-moz-appearance:auto;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:0.75rem 1rem;font-family:'DM Mono',monospace;font-size:0.9rem;color:var(--white);outline:none;width:100%;" />
+          <input type="date" id="linea-fecha-hasta" class="fecha-input" />
           <div class="input-hint">fin del período de ventas</div>
         </div>
       </div>
