@@ -476,6 +476,22 @@
 
       <div class="divider"></div>
 
+      <div style="font-size:9px;color:var(--gray);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">Período que comprenden estas ventas</div>
+      <div class="inputs-row" style="margin-bottom:1.25rem;">
+        <div class="input-group">
+          <label>Desde</label>
+          <input type="date" id="linea-fecha-desde" style="-moz-appearance:auto;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:0.75rem 1rem;font-family:'DM Mono',monospace;font-size:0.9rem;color:var(--white);outline:none;width:100%;" />
+          <div class="input-hint">inicio del período de ventas</div>
+        </div>
+        <div class="input-group">
+          <label>Hasta</label>
+          <input type="date" id="linea-fecha-hasta" style="-moz-appearance:auto;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:0.75rem 1rem;font-family:'DM Mono',monospace;font-size:0.9rem;color:var(--white);outline:none;width:100%;" />
+          <div class="input-hint">fin del período de ventas</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
       <div style="font-size:9px;color:var(--gray);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">Cash flow semanal</div>
       <div class="inputs-row-3" style="margin-bottom:1.25rem;">
         <div class="input-group">
@@ -972,7 +988,12 @@ function registrarLinea() {
   document.getElementById('cfg-pagado').value = lineaPagado.toFixed(2);
 
   const saldoRestante = Math.max(DEUDA_TOTAL - lineaPagado, 0);
-  const item = { num: lineaSemana++, fecha: today(), velas, enc, payouts, pctMP, fondoMP, repago, pendAnt, transf, sobrante, pendNuevo, saldoRestante, lineaPagado };
+  const fechaDesde = document.getElementById('linea-fecha-desde').value || '';
+  const fechaHasta = document.getElementById('linea-fecha-hasta').value || '';
+  const periodoLabel = fechaDesde && fechaHasta
+    ? `${new Date(fechaDesde+'T12:00:00').toLocaleDateString('es-PR',{month:'short',day:'numeric'})} — ${new Date(fechaHasta+'T12:00:00').toLocaleDateString('es-PR',{month:'short',day:'numeric'})}`
+    : '';
+  const item = { num: lineaSemana++, fecha: today(), fechaDesde, fechaHasta, periodoLabel, velas, enc, payouts, pctMP, fondoMP, repago, pendAnt, transf, sobrante, pendNuevo, saldoRestante, lineaPagado };
 
   histLinea.unshift(item);
   renderHistLinea(item);
@@ -984,6 +1005,8 @@ function registrarLinea() {
   document.getElementById('velas-input').value  = '';
   document.getElementById('enc-input').value    = '';
   document.getElementById('linea-payouts').value = '';
+  document.getElementById('linea-fecha-desde').value = '';
+  document.getElementById('linea-fecha-hasta').value = '';
   // Reset acumulado — nueva semana comienza
   acumPayoutsSemana = 0;
   updatePayoutBadge();
@@ -1006,7 +1029,7 @@ function renderHistLinea(item) {
   el.className = 'hist-item';
   el.innerHTML = `
     <div class="hist-header">
-      <span class="hist-date">Semana ${item.num} &nbsp;·&nbsp; ${item.fecha}</span>
+      <span class="hist-date">Semana ${item.num} &nbsp;·&nbsp; ${item.fecha}${item.periodoLabel ? ' &nbsp;·&nbsp; Ventas: ' + item.periodoLabel : ''}</span>
       <span class="hist-main green">${fmt(item.transf)}</span>
     </div>
     <div class="hist-details">
