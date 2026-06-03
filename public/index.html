@@ -379,22 +379,80 @@
 
     <!-- Config editable -->
     <div class="sec-title">Configuración editable</div>
-    <div class="config-grid">
+
+    <!-- Valores actuales -->
+    <div class="config-grid" style="margin-bottom:0.75rem;">
       <div class="config-card">
         <span class="config-label">Deuda inicial</span>
-        <input type="number" id="cfg-deuda" value="17618" step="1" oninput="updateLinea()" />
+        <div style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--gold-light);" id="display-cfg-deuda">$7,780.00</div>
       </div>
       <div class="config-card">
         <span class="config-label">Pagado acumulado</span>
-        <input type="number" id="cfg-pagado" value="0" step="0.01" oninput="updateLinea()" />
+        <div style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--green);" id="display-cfg-pagado">$0.00</div>
       </div>
       <div class="config-card">
         <span class="config-label">Tasa vela ($)</span>
-        <input type="number" id="cfg-tasa-vela" value="2.38" step="0.01" oninput="updateLinea()" />
+        <div style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--gold-light);" id="display-cfg-vela">$2.38</div>
       </div>
       <div class="config-card">
         <span class="config-label">Tasa enc ($)</span>
-        <input type="number" id="cfg-tasa-enc" value="3.62" step="0.01" oninput="updateLinea()" />
+        <div style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--gold-light);" id="display-cfg-enc">$3.62</div>
+      </div>
+    </div>
+
+    <!-- Inputs ocultos -->
+    <input type="hidden" id="cfg-deuda" value="7780" />
+    <input type="hidden" id="cfg-pagado" value="0" />
+    <input type="hidden" id="cfg-tasa-vela" value="2.38" />
+    <input type="hidden" id="cfg-tasa-enc" value="3.62" />
+
+    <button onclick="abrirConfigModal()" style="background:transparent;border:1px solid var(--border);color:var(--gray);border-radius:8px;padding:6px 16px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;margin-bottom:1.5rem;transition:all 0.2s;"
+      onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold-light)'"
+      onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--gray)'">
+      ✏ Editar configuración
+    </button>
+
+    <!-- MODAL -->
+    <div id="config-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;">
+      <div style="background:var(--navy-mid);border:1px solid var(--border);border-radius:16px;padding:2rem;width:90%;max-width:420px;">
+        <div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--white);margin-bottom:1.5rem;">Editar configuración</div>
+        
+        <div style="margin-bottom:1rem;">
+          <label style="font-size:9px;color:var(--gray);letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:6px;">Deuda inicial total</label>
+          <input type="number" id="modal-deuda" step="0.01"
+            style="width:100%;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'DM Mono',monospace;font-size:1.1rem;color:var(--white);outline:none;-moz-appearance:textfield;" />
+        </div>
+
+        <div style="margin-bottom:1rem;">
+          <label style="font-size:9px;color:var(--gray);letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:6px;">Pagado acumulado hasta hoy</label>
+          <input type="number" id="modal-pagado" step="0.01"
+            style="width:100%;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'DM Mono',monospace;font-size:1.1rem;color:var(--white);outline:none;-moz-appearance:textfield;" />
+          <div style="font-size:9px;color:var(--gray);margin-top:4px;">Saldo pendiente = Deuda inicial - Pagado acumulado</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.5rem;">
+          <div>
+            <label style="font-size:9px;color:var(--gray);letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:6px;">Tasa por vela ($)</label>
+            <input type="number" id="modal-vela" step="0.01"
+              style="width:100%;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'DM Mono',monospace;font-size:1.1rem;color:var(--white);outline:none;-moz-appearance:textfield;" />
+          </div>
+          <div>
+            <label style="font-size:9px;color:var(--gray);letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:6px;">Tasa por encendedor ($)</label>
+            <input type="number" id="modal-enc" step="0.01"
+              style="width:100%;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'DM Mono',monospace;font-size:1.1rem;color:var(--white);outline:none;-moz-appearance:textfield;" />
+          </div>
+        </div>
+
+        <!-- Preview saldo -->
+        <div id="modal-preview" style="background:var(--navy);border-radius:8px;padding:10px 14px;margin-bottom:1.5rem;font-size:12px;text-align:center;">
+          <span style="color:var(--gray);">Saldo pendiente resultante: </span>
+          <span style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--red);" id="modal-saldo-preview">$0.00</span>
+        </div>
+
+        <div style="display:flex;gap:10px;">
+          <button onclick="cerrarConfigModal()" style="flex:1;background:transparent;border:1px solid var(--border);color:var(--gray);border-radius:8px;padding:10px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;">Cancelar</button>
+          <button onclick="guardarConfig()" style="flex:2;background:var(--gold);color:var(--navy);border:none;border-radius:8px;padding:10px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;font-weight:500;">Guardar cambios</button>
+        </div>
       </div>
     </div>
 
@@ -839,7 +897,7 @@ function resetDist() {
 function updateLinea() {
   TASA_VELA   = parseFloat(document.getElementById('cfg-tasa-vela').value) || 2.38;
   TASA_ENC    = parseFloat(document.getElementById('cfg-tasa-enc').value)  || 3.62;
-  DEUDA_TOTAL = parseFloat(document.getElementById('cfg-deuda').value)     || 17618;
+  DEUDA_TOTAL = parseFloat(document.getElementById('cfg-deuda').value)     || 7780;
   lineaPagado = parseFloat(document.getElementById('cfg-pagado').value)    || 0;
 
   document.getElementById('display-tasa-vela').innerHTML = '$' + TASA_VELA.toFixed(2) + '<span>por vela vendida</span>';
@@ -1076,6 +1134,65 @@ function resetAcumPayouts() {
 }
 
 // =============================================
+// MODAL CONFIGURACIÓN LÍNEA
+// =============================================
+function abrirConfigModal() {
+  document.getElementById('modal-deuda').value  = DEUDA_TOTAL;
+  document.getElementById('modal-pagado').value = lineaPagado;
+  document.getElementById('modal-vela').value   = TASA_VELA;
+  document.getElementById('modal-enc').value    = TASA_ENC;
+  updateModalPreview();
+  const modal = document.getElementById('config-modal');
+  modal.style.display = 'flex';
+  document.getElementById('modal-deuda').addEventListener('input', updateModalPreview);
+  document.getElementById('modal-pagado').addEventListener('input', updateModalPreview);
+}
+
+function updateModalPreview() {
+  const deuda  = parseFloat(document.getElementById('modal-deuda').value)  || 0;
+  const pagado = parseFloat(document.getElementById('modal-pagado').value) || 0;
+  const saldo  = Math.max(deuda - pagado, 0);
+  document.getElementById('modal-saldo-preview').textContent = fmt(saldo);
+  document.getElementById('modal-saldo-preview').style.color = saldo > 0 ? 'var(--red)' : 'var(--green)';
+}
+
+function cerrarConfigModal() {
+  document.getElementById('config-modal').style.display = 'none';
+}
+
+function guardarConfig() {
+  DEUDA_TOTAL  = parseFloat(document.getElementById('modal-deuda').value)  || DEUDA_TOTAL;
+  lineaPagado  = parseFloat(document.getElementById('modal-pagado').value) || 0;
+  TASA_VELA    = parseFloat(document.getElementById('modal-vela').value)   || TASA_VELA;
+  TASA_ENC     = parseFloat(document.getElementById('modal-enc').value)    || TASA_ENC;
+
+  // Update hidden inputs
+  document.getElementById('cfg-deuda').value     = DEUDA_TOTAL;
+  document.getElementById('cfg-pagado').value    = lineaPagado;
+  document.getElementById('cfg-tasa-vela').value = TASA_VELA;
+  document.getElementById('cfg-tasa-enc').value  = TASA_ENC;
+
+  // Update display values
+  document.getElementById('display-cfg-deuda').textContent  = fmt(DEUDA_TOTAL);
+  document.getElementById('display-cfg-pagado').textContent = fmt(lineaPagado);
+  document.getElementById('display-cfg-vela').textContent   = '$' + TASA_VELA.toFixed(2);
+  document.getElementById('display-cfg-enc').textContent    = '$' + TASA_ENC.toFixed(2);
+
+  // Update formula displays
+  document.getElementById('display-tasa-vela').innerHTML = '$' + TASA_VELA.toFixed(2) + '<span>por vela vendida</span>';
+  document.getElementById('display-tasa-enc').innerHTML  = '$' + TASA_ENC.toFixed(2)  + '<span>por encendedor vendido</span>';
+  document.getElementById('hint-velas').textContent = 'velas × $' + TASA_VELA.toFixed(2);
+  document.getElementById('hint-enc').textContent   = 'encendedores × $' + TASA_ENC.toFixed(2);
+  document.getElementById('linea-deuda-label').textContent    = fmt(DEUDA_TOTAL);
+  document.getElementById('linea-deuda-display').textContent  = fmt(DEUDA_TOTAL);
+
+  updateLineaDisplays();
+  calcLinea();
+  saveAll();
+  cerrarConfigModal();
+}
+
+// =============================================
 // PERSISTENCIA
 // =============================================
 function saveAll() {
@@ -1106,6 +1223,13 @@ function loadAll() {
     }
     if (data.payoutsUsados) {
       payoutsUsados = data.payoutsUsados;
+    }
+    // Update display values from loaded config
+    if (document.getElementById('display-cfg-deuda')) {
+      document.getElementById('display-cfg-deuda').textContent  = fmt(DEUDA_TOTAL);
+      document.getElementById('display-cfg-pagado').textContent = fmt(lineaPagado);
+      document.getElementById('display-cfg-vela').textContent   = '$' + TASA_VELA.toFixed(2);
+      document.getElementById('display-cfg-enc').textContent    = '$' + TASA_ENC.toFixed(2);
     }
     document.getElementById('cfg-pagado').value = lineaPagado;
 
