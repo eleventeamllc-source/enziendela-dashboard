@@ -10,7 +10,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Balance de la cuenta operacional
 app.get('/api/balance', async (req, res) => {
   const apiKey = process.env.MERCURY_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'API key no configurada' });
@@ -30,9 +29,22 @@ app.get('/api/balance', async (req, res) => {
     const accountsData = await accountsRes.json();
     const accounts = accountsData.accounts || [];
 
-    const cuentas = accounts.map(a => ({
+    const CUENTA_PAYOUT = '202481174037';
+    const cuentasFiltradas = accounts
+      .filter(a => {
+        const num = (a.accountNumber || a.routingInfo?.accountNumber || a.id || '').toString();
+        return num.includes(CUENTA_PAYOUT);
+      })
+      .map(a => ({
+        id:      a.id,
+        nombre:  a.name || a.nickname || 'Cuenta Payout',
+        balance: a.availableBalance ?? a.currentBalance ?? 0,
+        tipo:    a.type || 'checking'
+      }));
+
+    const cuentas = cuentasFiltradas.length > 0 ? cuentasFiltradas : accounts.slice(0, 1).map(a => ({
       id:      a.id,
-      nombre:  a.name || a.nickname || 'Cuenta operacional',
+      nombre:  a.name || a.nickname || 'Cuenta Payout',
       balance: a.availableBalance ?? a.currentBalance ?? 0,
       tipo:    a.type || 'checking'
     }));
