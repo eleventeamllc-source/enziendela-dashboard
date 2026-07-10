@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enziéndela — Datos Semanales</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #faf9f6;
+    --surface: #f2f0eb;
+    --surface2: #e8e5de;
+    --border: #d8d4ca;
+    --accent: #8b6f3e;
+    --accent2: #c9a96e;
+    --text: #1a1815;
+    --text2: #5c5242;
+    --text3: #9e9080;
+    --green: #2d7a50;
+    --red: #c95a4a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    padding: 2rem 1rem 4rem;
+  }
+
+  .container {
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  .flame {
+    font-size: 28px;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+    margin-bottom: 4px;
+  }
+
+  .header p {
+    font-size: 12px;
+    color: var(--text3);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .section {
+    margin-bottom: 2rem;
+  }
+
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 12px;
+  }
+
+  .section-label::before {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 12px;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .grid.single {
+    grid-template-columns: 1fr;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .field label {
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .field input {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 15px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+    -webkit-appearance: none;
+  }
+
+  .field input:focus {
+    border-color: var(--accent2);
+    background: var(--surface2);
+  }
+
+  .field input::placeholder {
+    color: var(--text3);
+    font-size: 13px;
+  }
+
+  .divider {
+    height: 0.5px;
+    background: var(--border);
+    margin: 1.5rem 0;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: #0f0e0c;
+    border: none;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    margin-top: 1.5rem;
+    transition: background 0.2s, transform 0.1s;
+  }
+
+  .btn:active { transform: scale(0.98); background: var(--accent2); }
+
+  .output-wrap {
+    margin-top: 1.5rem;
+    display: none;
+  }
+
+  .output-wrap.visible { display: block; }
+
+  .output-box {
+    background: var(--surface);
+    border: 0.5px solid var(--accent2);
+    border-radius: 8px;
+    padding: 1.25rem;
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .copy-btn {
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    color: var(--accent);
+    border: 0.5px solid var(--accent2);
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.2s;
+    letter-spacing: 0.03em;
+  }
+
+  .copy-btn:active { background: var(--surface2); }
+
+  .copied {
+    text-align: center;
+    font-size: 12px;
+    color: var(--green);
+    margin-top: 8px;
+    display: none;
+  }
+
+  .copied.show { display: block; }
+
+  .instruction {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text3);
+    margin-top: 10px;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <span class="flame">🕯️</span>
+    <h1>Enziéndela</h1>
+    <p>Datos semanales · Dashboard</p>
+  </div>
+
+  <!-- PERÍODO -->
+  <div class="section">
+    <div class="section-label">Período</div>
+    <div class="grid">
+      <div class="field">
+        <label>Día del mes</label>
+        <input id="dia" type="number" placeholder="ej: 26" inputmode="numeric" />
+      </div>
+      <div class="field">
+        <label>Net Sales acumulado ($)</label>
+        <input id="netSales" type="number" placeholder="ej: 27218" inputmode="decimal" />
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- SHOPIFY -->
+  <div class="section">
+    <div class="section-label">Shopify</div>
+    <div class="grid">
+      <div class="field">
+        <label>Gross Sales ($)</label>
+        <input id="grossSales" type="number" placeholder="ej: 33162" inputmode="decimal" />
+      </div>
+      <div class="field">
+        <label>Número de órdenes</label>
+        <input id="ordenes" type="number" placeholder="ej: 408" inputmode="numeric" />
+      </div>
+      <div class="field">
+        <label>AOV ($)</label>
+        <input id="aov" type="number" step="0.01" placeholder="ej: 72.12" inputmode="decimal" />
+      </div>
+      <div class="field">
+        <label>Sesiones</label>
+        <input id="sesiones" type="number" placeholder="ej: 9877" inputmode="numeric" />
+      </div>
+      <div class="field">
+        <label>Conversión checkout (%)</label>
+        <input id="conversion" type="number" step="0.01" placeholder="ej: 50.74" inputmode="decimal" />
+      </div>
+      <div class="field">
+        <label>Clientes recurrentes (%)</label>
+        <input id="recurrentes" type="number" step="0.1" placeholder="ej: 54" inputmode="decimal" />
+      </div>
+      <div class="field">
+        <label>Encendedores vendidos</label>
+        <input id="encendedores" type="number" placeholder="ej: 145" inputmode="numeric" />
+      </div>
+      <div class="field">
+        <label>Descuentos totales ($)</label>
+        <input id="descuentos" type="number" placeholder="ej: 1031" inputmode="decimal" />
+      </div>
+      <div class="field">
+        <label>$5 off (3 velas) ($)</label>
+        <input id="off5" type="number" placeholder="ej: 910" inputmode="decimal" />
+      </div>
+      <div class="field">
+        <label>10% off carritos ($)</label>
+        <input id="off10" type="number" placeholder="ej: 117.9" inputmode="decimal" />
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- META ADS -->
+  <div class="section">
+    <div class="section-label">Meta Ads</div>
+    <div class="grid">
+      <div class="field">
+        <label>Gasto Meta Ads ($)</label>
+        <input id="gastoMeta" type="number" placeholder="ej: 4701" inputmode="decimal" />
+      </div>
+      <div class="field">
+        <label>Compras atribuidas</label>
+        <input id="comprasMeta" type="number" placeholder="ej: 342" inputmode="numeric" />
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- BANCO -->
+  <div class="section">
+    <div class="section-label">Banco</div>
+    <div class="grid">
+      <div class="field">
+        <label>Balance Mercury ($)</label>
+        <input id="mercury" type="number" placeholder="ej: 2441" inputmode="decimal" />
+      </div>
+      <div class="field">
+        <label>Depósito acumulado mes ($)</label>
+        <input id="deposito" type="number" placeholder="ej: 23370" inputmode="decimal" />
+      </div>
+    </div>
+  </div>
+
+  <button class="btn" onclick="generar()">Generar texto para Claude →</button>
+
+  <div class="output-wrap" id="outputWrap">
+    <div class="output-box" id="outputBox"></div>
+    <button class="copy-btn" onclick="copiar()">Copiar y pegar en Claude</button>
+    <div class="copied" id="copied">✓ Copiado — pégalo en Claude</div>
+    <p class="instruction">Abre Claude, pega el texto y te genera el dashboard al instante.</p>
+  </div>
+
+</div>
+
+<script>
+function v(id) { return document.getElementById(id).value || 'N/A'; }
+
+function generar() {
+  const dia = v('dia'), net = v('netSales');
+  if (dia === 'N/A' || net === 'N/A') {
+    alert('Día del mes y Net Sales son requeridos.');
+    return;
+  }
+
+  const texto = `Datos semana Enziéndela:
+- Día del mes: ${dia}
+- Net Sales acumulado: $${v('netSales')}
+- Gross Sales: $${v('grossSales')}
+- Órdenes: ${v('ordenes')}
+- AOV: $${v('aov')}
+- Sesiones: ${v('sesiones')}
+- Conversión checkout: ${v('conversion')}%
+- Clientes recurrentes: ${v('recurrentes')}%
+- Encendedores vendidos: ${v('encendedores')}
+- Descuentos totales: $${v('descuentos')}
+- $5 off (3 velas): $${v('off5')}
+- 10% off carritos: $${v('off10')}
+- Gasto Meta Ads: $${v('gastoMeta')}
+- Compras atribuidas Meta: ${v('comprasMeta')}
+- Balance Mercury: $${v('mercury')}
+- Depósito acumulado mes: $${v('deposito')}`;
+
+  document.getElementById('outputBox').textContent = texto;
+  const wrap = document.getElementById('outputWrap');
+  wrap.classList.add('visible');
+  wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function copiar() {
+  const texto = document.getElementById('outputBox').textContent;
+  navigator.clipboard.writeText(texto).then(() => {
+    const c = document.getElementById('copied');
+    c.classList.add('show');
+    setTimeout(() => c.classList.remove('show'), 3000);
+  });
+}
+</script>
+</body>
+</html>
