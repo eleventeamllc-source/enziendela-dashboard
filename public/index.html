@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enziendela — Dashboard Financiero</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0A1628;
+    --navy-mid: #142240;
+    --navy-soft: #1E3460;
+    --gold: #C9A84C;
+    --gold-light: #E8C96A;
+    --gold-pale: #F5E9C8;
+    --green: #1D9E75;
+    --green-light: rgba(29,158,117,0.1);
+    --green-dark: #085041;
+    --red: #E24B4A;
+    --red-light: rgba(226,75,74,0.1);
+    --amber: #EF9F27;
+    --amber-light: rgba(239,159,39,0.1);
+    --purple: #7F77DD;
+    --blue: #378ADD;
+    --white: #FAFAF8;
+    --gray: #8A8A84;
+    --border: rgba(201,168,76,0.2);
+    --border-soft: rgba(255,255,255,0.07);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--navy); color: var(--white); font-family: 'DM Mono', monospace; min-height: 100vh; }
+  body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(ellipse 80% 50% at 20% 20%, rgba(201,168,76,0.06) 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 80% 80%, rgba(29,158,117,0.05) 0%, transparent 50%); pointer-events: none; z-index: 0; }
+  .container { max-width: 820px; margin: 0 auto; padding: 2rem 1.5rem 4rem; position: relative; z-index: 1; }
+  .header { text-align: center; padding: 2.5rem 0 2rem; border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
+  .brand { font-family: 'DM Serif Display', serif; font-style: italic; font-size: 13px; color: var(--gold); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 0.75rem; display: block; }
+  .header h1 { font-family: 'DM Serif Display', serif; font-size: clamp(1.8rem, 5vw, 2.4rem); font-weight: 400; color: var(--white); line-height: 1.15; margin-bottom: 0.5rem; }
+  .header h1 em { font-style: italic; color: var(--gold-light); }
+  .header p { font-size: 11px; color: var(--gray); letter-spacing: 0.05em; }
+  .tabs { display: flex; gap: 4px; background: var(--navy-mid); border: 1px solid var(--border); border-radius: 10px; padding: 4px; margin-bottom: 2rem; }
+  .tab { flex: 1; padding: 0.6rem 1rem; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; border: none; background: transparent; color: var(--gray); border-radius: 7px; cursor: pointer; transition: all 0.2s; }
+  .tab.active { background: var(--navy); color: var(--gold-light); border: 1px solid var(--border); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  .sec-title { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+  .sec-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .card { background: var(--navy-mid); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+  .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; }
+  .stat-card { background: var(--navy-mid); padding: 1.25rem 1rem; text-align: center; }
+  .stat-label { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gray); margin-bottom: 0.5rem; display: block; }
+  .stat-value { font-family: 'DM Serif Display', serif; font-size: 1.6rem; line-height: 1; margin-bottom: 0.3rem; }
+  .stat-value.gold { color: var(--gold-light); }
+  .stat-value.green { color: var(--green); }
+  .stat-value.red { color: var(--red); }
+  .stat-value.amber { color: var(--amber); }
+  .stat-sub { font-size: 9px; color: var(--gray); }
+  .prog-meta { display: flex; justify-content: space-between; font-size: 10px; color: var(--gray); margin-bottom: 6px; }
+  .prog-track { height: 6px; background: var(--navy-soft); border-radius: 3px; overflow: hidden; margin-bottom: 1.5rem; }
+  .prog-fill { height: 100%; border-radius: 3px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
+  .inputs-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+  .inputs-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+  .input-group label { display: block; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray); margin-bottom: 6px; }
+  .input-group input { width: 100%; background: var(--navy); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; font-family: 'DM Mono', monospace; font-size: 1rem; color: var(--white); text-align: center; outline: none; transition: border-color 0.2s; -moz-appearance: textfield; }
+  .input-group input::-webkit-outer-spin-button, .input-group input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .input-group input:focus { border-color: var(--gold); }
+  .fecha-input { width:100%; background:var(--navy); border:1px solid var(--border); border-radius:8px; padding:0.75rem 1rem; font-family:'DM Mono',monospace; font-size:0.9rem; color:var(--white); outline:none; cursor:pointer; color-scheme:dark; }
+  .fecha-input:focus { border-color:var(--gold); }
+  .input-hint { font-size: 9px; color: var(--gray); text-align: center; margin-top: 4px; }
+  .dist-table { width: 100%; border-collapse: collapse; margin-bottom: 1.25rem; }
+  .dist-table th { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray); padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  .dist-table th:last-child, .dist-table th:nth-child(3) { text-align: right; }
+  .dist-table td { padding: 8px 12px; font-size: 12px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
+  .dist-table td:nth-child(2) { text-align: center; color: var(--gold-light); font-weight: 500; }
+  .dist-table td:nth-child(3) { text-align: right; font-family: 'DM Serif Display', serif; font-size: 1.1rem; color: var(--white); }
+  .dist-table td:last-child { text-align: right; }
+  .dist-table tr:last-child td { border-bottom: none; font-weight: 500; border-top: 1px solid var(--border); }
+  .dist-table tr:hover td { background: var(--border-soft); }
+  .pct-input { width: 60px; background: transparent; border: none; border-bottom: 1px solid var(--border); color: var(--gold-light); font-family: 'DM Mono', monospace; font-size: 12px; text-align: center; outline: none; padding: 2px 0; -moz-appearance: textfield; }
+  .pct-input::-webkit-outer-spin-button, .pct-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .pct-input:focus { border-color: var(--gold); }
+  .check-wrap { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+  .check-wrap input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--green); cursor: pointer; }
+  .check-label { font-size: 10px; color: var(--gray); }
+  .check-label.paid { color: var(--green); }
+  .main-result { background: var(--navy); border: 1px solid var(--green); border-radius: 10px; padding: 1.5rem; text-align: center; margin-bottom: 1rem; }
+  .main-result.active { background: var(--green-light); }
+  .main-label { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gray); margin-bottom: 0.5rem; }
+  .main-amount { font-family: 'DM Serif Display', serif; font-size: 3rem; color: var(--green); line-height: 1; margin-bottom: 0.4rem; }
+  .main-sub { font-size: 10px; color: var(--gray); }
+  .btn { width: 100%; background: var(--gold); color: var(--navy); border: none; border-radius: 8px; padding: 0.875rem 1.5rem; font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; margin-bottom: 0.5rem; }
+  .btn:hover { background: var(--gold-light); transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .btn-reset { background: transparent; border: 1px solid rgba(226,75,74,0.4); color: var(--red); border-radius: 8px; padding: 0.5rem 1.25rem; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; width: auto; }
+  .btn-reset:hover { border-color: var(--red); background: var(--red-light); }
+  .formulas { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.5rem; }
+  .formula-card { background: var(--navy-mid); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; display: flex; align-items: center; gap: 1rem; }
+  .formula-icon { font-size: 1.5rem; flex-shrink: 0; }
+  .formula-name { font-size: 9px; color: var(--gray); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 3px; }
+  .formula-rate { font-family: 'DM Serif Display', serif; font-size: 1.6rem; color: var(--gold-light); line-height: 1; }
+  .formula-rate span { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--gray); display: block; margin-top: 2px; }
+  .config-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 1.5rem; }
+  .config-card { background: var(--navy-mid); border: 1px solid var(--border-soft); border-radius: 8px; padding: 0.75rem; text-align: center; }
+  .config-label { font-size: 9px; color: var(--gray); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; display: block; }
+  .config-card input { width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--border); color: var(--gold-light); font-family: 'DM Serif Display', serif; font-size: 1.1rem; text-align: center; outline: none; padding: 2px 0; -moz-appearance: textfield; }
+  .config-card input::-webkit-outer-spin-button, .config-card input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1rem; }
+  .result-card { background: var(--navy); border-radius: 8px; padding: 0.875rem 1rem; }
+  .result-card.highlight { border: 1px solid var(--green); background: var(--green-light); }
+  .result-card.warn { border: 1px solid var(--amber); background: var(--amber-light); }
+  .rc-label { font-size: 9px; color: var(--gray); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+  .rc-value { font-family: 'DM Serif Display', serif; font-size: 1.4rem; line-height: 1; }
+  .rc-value.green { color: var(--green); }
+  .rc-value.gold { color: var(--gold-light); }
+  .rc-value.amber { color: var(--amber); }
+  .rc-value.red { color: var(--red); }
+  .rc-value.white { color: var(--white); }
+  .rc-sub { font-size: 9px; color: var(--gray); margin-top: 3px; }
+  .divider { height: 1px; background: var(--border); margin: 1.25rem 0; }
+  .hist-empty { text-align: center; padding: 2rem; font-size: 11px; color: var(--gray); background: var(--navy-mid); border: 1px solid var(--border); border-radius: 10px; }
+  .hist-item { background: var(--navy-mid); border: 1px solid var(--border-soft); border-radius: 8px; padding: 1rem; margin-bottom: 6px; animation: slideIn 0.3s ease; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+  .hist-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .hist-date { font-size: 10px; color: var(--gray); }
+  .hist-main { font-family: 'DM Serif Display', serif; font-size: 1.2rem; }
+  .hist-main.green { color: var(--green); }
+  .hist-main.gold { color: var(--gold-light); }
+  .hist-details { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
+  .hist-detail-label { font-size: 9px; color: var(--gray); margin-bottom: 2px; }
+  .hist-detail-value { font-size: 10px; color: var(--white); }
+  .hist-detail-value.green { color: var(--green); }
+  .hist-detail-value.amber { color: var(--amber); }
+  .saldado-msg { display: none; text-align: center; padding: 2rem; background: linear-gradient(135deg, rgba(29,158,117,0.15), rgba(201,168,76,0.1)); border: 1px solid var(--green); border-radius: 12px; margin-bottom: 1.5rem; }
+  .saldado-msg.show { display: block; }
+  .saldado-msg h2 { font-family: 'DM Serif Display', serif; font-size: 1.8rem; color: var(--gold-light); margin-bottom: 0.5rem; }
+  .resumen-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 1.5rem; }
+  .footer { text-align: center; padding: 2rem 0 0; border-top: 1px solid var(--border); font-size: 9px; color: var(--gray); letter-spacing: 0.1em; }
+  @media (max-width: 520px) {
+    .stat-grid, .resumen-grid { grid-template-columns: 1fr 1fr; }
+    .formulas, .inputs-row, .results-grid { grid-template-columns: 1fr; }
+    .inputs-row-3, .config-grid { grid-template-columns: 1fr 1fr; }
+    .hist-details { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <span class="brand">Enziendela Candle Co.</span>
+    <h1>Dashboard<br><em>Financiero</em></h1>
+    <p>Distribución de payouts · Línea de crédito · Resumen del mes</p>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('dist')">💰 Distribución</button>
+    <button class="tab" onclick="showTab('linea')">📊 Línea de Crédito</button>
+    <button class="tab" onclick="showTab('resumen')">📈 Resumen del Mes</button>
+  </div>
+
+  <!-- TAB 1: DISTRIBUCIÓN -->
+  <div class="tab-content active" id="tab-dist">
+    <div class="card">
+      <div class="sec-title">Configuración del mes</div>
+      <div class="inputs-row">
+        <div class="input-group">
+          <label>Meta del mes</label>
+          <input type="number" id="meta-mes" value="35000" oninput="updateResumen()" />
+          <div class="input-hint">revenue neto objetivo</div>
+        </div>
+        <div class="input-group">
+          <label>Mes actual</label>
+          <input type="text" id="nombre-mes" placeholder="Mayo 2026" style="-moz-appearance:auto;" />
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-title">Registrar payout recibido</div>
+      <div class="inputs-row">
+        <div class="input-group">
+          <label>Monto del depósito recibido</label>
+          <input type="number" id="payout-monto" placeholder="0.00" min="0" step="0.01" oninput="calcDist()" />
+          <div class="input-hint">depósito de Shopify / Mercury</div>
+        </div>
+        <div class="input-group">
+          <label>Fecha del depósito</label>
+          <input type="date" id="payout-fecha" style="-moz-appearance:auto;" />
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;">
+        <span style="font-size:9px;color:var(--gray);letter-spacing:0.08em;text-transform:uppercase;">Modo:</span>
+        <div style="display:flex;background:var(--navy);border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+          <button id="btn-modo-auto" onclick="setModo('auto')" style="padding:5px 14px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.08em;text-transform:uppercase;border:none;cursor:pointer;background:var(--gold);color:var(--navy);">% Automático</button>
+          <button id="btn-modo-manual" onclick="setModo('manual')" style="padding:5px 14px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.08em;text-transform:uppercase;border:none;cursor:pointer;background:transparent;color:var(--gray);">Manual</button>
+        </div>
+        <span id="modo-hint" style="font-size:9px;color:var(--gray);">Los montos se calculan según el %</span>
+      </div>
+      <table class="dist-table" id="dist-table">
+        <thead>
+          <tr>
+            <th>Categoría</th>
+            <th id="th-pct">% </th>
+            <th>Monto asignado</th>
+            <th>Pagado</th>
+          </tr>
+        </thead>
+        <tbody id="dist-body"></tbody>
+        <tfoot>
+          <tr>
+            <td><strong>TOTAL</strong></td>
+            <td id="total-pct" style="text-align:center;color:var(--gold-light);font-weight:500;">100</td>
+            <td id="total-monto" style="text-align:right;font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--white);">$0.00</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+      <div id="manual-indicator" style="display:none;background:rgba(239,159,39,0.1);border:1px solid rgba(239,159,39,0.3);border-radius:8px;padding:8px 12px;margin-bottom:1rem;font-size:11px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="color:var(--amber);">Asignado manualmente: <strong id="manual-asignado">$0.00</strong></span>
+          <span id="manual-restante" style="color:var(--gray);">Disponible: $0.00</span>
+        </div>
+        <div id="manual-barra-track" style="height:4px;background:var(--navy-soft);border-radius:2px;margin-top:6px;overflow:hidden;">
+          <div id="manual-barra-fill" style="height:100%;background:var(--amber);border-radius:2px;width:0%;transition:width 0.3s;"></div>
+        </div>
+      </div>
+      <div class="main-result active" style="margin-top:0;">
+        <div class="main-label">Total distribuido este payout</div>
+        <div class="main-amount" id="dist-total">$0.00</div>
+        <div class="main-sub" id="dist-sub">Ingresa el monto del depósito</div>
+      </div>
+      <button class="btn" id="btn-dist" onclick="registrarDist()" disabled>Registrar este payout</button>
+    </div>
+    <div class="card" id="mercury-card" style="border-color:rgba(29,158,117,0.4);">
+      <div class="sec-title" style="color:var(--green);">Sincronizar con Mercury</div>
+      <div style="font-size:11px;color:var(--gray);margin-bottom:1rem;line-height:1.7;">Carga el balance actual de tu cuenta de Mercury.</div>
+      <button class="btn" id="btn-sync" onclick="syncMercury()" style="background:var(--green);margin-bottom:0;">Cargar balance de Mercury</button>
+      <div id="sync-status" style="display:none;margin-top:0.75rem;padding:0.75rem;border-radius:8px;font-size:11px;"></div>
+      <div id="mercury-balance-list" style="display:none;margin-top:1rem;">
+        <div style="font-size:9px;color:var(--gray);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">Balance disponible en Mercury</div>
+        <div id="mercury-balance-items"></div>
+      </div>
+    </div>
+    <div class="sec-title">Historial de payouts</div>
+    <div id="hist-dist"><div class="hist-empty">Aún no hay payouts registrados.</div></div>
+    <div style="text-align:center;margin-top:1.5rem;">
+      <button class="btn-reset" onclick="resetDist()">Resetear distribución</button>
+    </div>
+  </div>
+
+  <!-- TAB 2: LÍNEA DE CRÉDITO -->
+  <div class="tab-content" id="tab-linea">
+    <div class="saldado-msg" id="saldado-msg">
+      <h2>¡Línea Saldada! 🎉</h2>
+      <p>Completaste el pago. El negocio opera libre de deuda en empaque.</p>
+    </div>
+    <div class="sec-title">Estado de la línea de crédito</div>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <span class="stat-label">Deuda inicial</span>
+        <div class="stat-value gold" id="linea-deuda-display">$17,618</div>
+        <div class="stat-sub">cajas $16,102 + enc $1,516</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Pagado acumulado</span>
+        <div class="stat-value green" id="linea-pagado-display">$0.00</div>
+        <div class="stat-sub" id="linea-pagado-pct">0.0% completado</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Saldo pendiente</span>
+        <div class="stat-value red" id="linea-saldo-display">$17,618.00</div>
+        <div class="stat-sub" id="linea-meses">~3.8 meses a ritmo actual</div>
+      </div>
+    </div>
+    <div class="prog-meta">
+      <span>$0</span>
+      <span id="linea-prog-label">0% pagado</span>
+      <span id="linea-deuda-label">$17,618</span>
+    </div>
+    <div class="prog-track" style="margin-bottom:1.5rem;">
+      <div class="prog-fill" id="linea-prog-bar" style="background:linear-gradient(90deg,var(--green),var(--gold));width:0%;"></div>
+    </div>
+    <div class="sec-title">Fórmulas de amortización</div>
+    <div class="formulas">
+      <div class="formula-card">
+        <div class="formula-icon">🕯️</div>
+        <div>
+          <div class="formula-name">Por cada vela vendida</div>
+          <div class="formula-rate" id="display-tasa-vela">$2.38<span>64.1% del costo caja $3.71</span></div>
+        </div>
+      </div>
+      <div class="formula-card">
+        <div class="formula-icon">⚡</div>
+        <div>
+          <div class="formula-name">Por cada encendedor vendido</div>
+          <div class="formula-rate" id="display-tasa-enc">$3.62<span>100% del costo enc $3.62</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="sec-title">Configuración editable</div>
+    <div class="config-grid" style="margin-bottom:0.75rem;">
+      <div class="config-card">
+        <span class="config-label">Deuda inicial</span>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--gold-light);" id="display-cfg-deuda">$7,780.00</div>
+      </div>
+      <div class="config-card">
+        <span class="config-label">Pagado acumulado</span>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--green);" id="display-cfg-pagado">$0.00</div>
+      </div>
+      <div class="config-card">
+        <span class="config-label">Tasa vela ($)</span>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--gold-light);" id="display-cfg-vela">$2.38</div>
+      </div>
+      <div class="config-card">
+        <span class="config-label">Tasa enc ($)</span>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--gold-light);" id="display-cfg-enc">$3.62</div>
+      </div>
+    </div>
+    <input type="hidden" id="cfg-deuda" value="7780" />
+    <input type="hidden" id="cfg-pagado" value="0" />
+    <input type="hidden" id="cfg-tasa-vela" value="2.38" />
+    <input type="hidden" id="cfg-tasa-enc" value="3.62" />
+    <button onclick="abrirConfigModal()" style="background:transparent;border:1px solid var(--border);color:var(--gray);border-radius:8px;padding:6px 16px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;margin-bottom:1.5rem;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold-light)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--gray)'">✏ Editar configuración</button>
+    <div id="config-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;">
+      <div style="background:var(--navy-mid);border:1px solid var(--border);border-radius:16px;padding:2rem;width:90%;max-width:420px;">
+        <div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--white);margin-bottom:1.5rem;">Editar configuración</div>
+        <div style="margin-bottom:1rem;">
+          <label style="font-size:9px;color:var(--gray);letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:6px;">Deuda inicial total</label>
+          <input type="number" id="modal-deuda" step="0.01" style="width:100%;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'DM Mono',monospace;font-size:1.1rem;color:var(--white);outline:none;-moz-appearance:textfield;" />
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label style="font-size:9px;color:var(--gray);letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:6px;">Pagado acumulado hasta hoy</label>
+          <input type="number" id="modal-pagado" step="0.01" style="width:100%;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'DM Mono',monospace;font-size:1.1rem;color:var(--white);outline:none;-moz-appearance:textfield;" />
+          <div style="font-size:9px;color:var(--gray);margin-top:4px;">Saldo pendiente = Deuda inicial - Pagado acumulado</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.5rem;">
+          <div>
+            <label style="font-size:9px;color:var(--gray);letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:6px;">Tasa por vela ($)</label>
+            <input type="number" id="modal-vela" step="0.01" style="width:100%;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'DM Mono',monospace;font-size:1.1rem;color:var(--white);outline:none;-moz-appearance:textfield;" />
+          </div>
+          <div>
+            <label style="font-size:9px;color:var(--gray);letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:6px;">Tasa por encendedor ($)</label>
+            <input type="number" id="modal-enc" step="0.01" style="width:100%;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'DM Mono',monospace;font-size:1.1rem;color:var(--white);outline:none;-moz-appearance:textfield;" />
+          </div>
+        </div>
+        <div id="modal-preview" style="background:var(--navy);border-radius:8px;padding:10px 14px;margin-bottom:1.5rem;font-size:12px;text-align:center;">
+          <span style="color:var(--gray);">Saldo pendiente resultante: </span>
+          <span style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--red);" id="modal-saldo-preview">$0.00</span>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button onclick="cerrarConfigModal()" style="flex:1;background:transparent;border:1px solid var(--border);color:var(--gray);border-radius:8px;padding:10px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;">Cancelar</button>
+          <button onclick="guardarConfig()" style="flex:2;background:var(--gold);color:var(--navy);border:none;border-radius:8px;padding:10px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;font-weight:500;">Guardar cambios</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:1rem;">Calculadora semanal</div>
+      <div style="font-size:9px;color:var(--gray);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">Unidades vendidas</div>
+      <div class="inputs-row" style="margin-bottom:1.25rem;">
+        <div class="input-group">
+          <label>Velas vendidas esta semana</label>
+          <input type="number" id="velas-input" placeholder="0" min="0" oninput="calcLinea()" />
+          <div class="input-hint" id="hint-velas">velas × $2.38</div>
+        </div>
+        <div class="input-group">
+          <label>Encendedores vendidos esta semana</label>
+          <input type="number" id="enc-input" placeholder="0" min="0" oninput="calcLinea()" />
+          <div class="input-hint" id="hint-enc">encendedores × $3.62</div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div style="font-size:9px;color:var(--gray);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">Período que comprenden estas ventas</div>
+      <div class="inputs-row" style="margin-bottom:1.25rem;">
+        <div class="input-group">
+          <label>Desde</label>
+          <input type="date" id="linea-fecha-desde" class="fecha-input" />
+          <div class="input-hint">inicio del período de ventas</div>
+        </div>
+        <div class="input-group">
+          <label>Hasta</label>
+          <input type="date" id="linea-fecha-hasta" class="fecha-input" />
+          <div class="input-hint">fin del período de ventas</div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div style="font-size:9px;color:var(--gray);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">Cash flow semanal</div>
+      <div class="inputs-row-3" style="margin-bottom:1.25rem;">
+        <div class="input-group">
+          <label>Payouts recibidos esta semana</label>
+          <input type="number" id="linea-payouts" placeholder="0.00" min="0" step="0.01" oninput="calcLinea()" />
+          <div class="input-hint" id="linea-payouts-hint">depósitos de Shopify</div>
+          <div id="payout-badge" style="display:none;margin-top:6px;padding:4px 8px;background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);border-radius:6px;font-size:9px;color:var(--gold-light);text-align:center;display:flex;justify-content:space-between;align-items:center;">
+            <span id="payout-badge-text">Acumulado de distribución</span>
+            <button onclick="resetAcumPayouts()" style="background:transparent;border:none;color:var(--gray);font-size:9px;cursor:pointer;letter-spacing:0.05em;font-family:'DM Mono',monospace;">✕ nueva semana</button>
+          </div>
+        </div>
+        <div class="input-group">
+          <label>% materia prima</label>
+          <input type="number" id="linea-pct-mp" placeholder="34" min="0" max="100" value="34" oninput="calcLinea()" />
+          <div class="input-hint">del payout para COGS</div>
+        </div>
+        <div class="input-group">
+          <label>Pendiente semana anterior</label>
+          <input type="number" id="linea-pendiente" placeholder="0.00" min="0" step="0.01" oninput="calcLinea()" />
+          <div class="input-hint">balance de semana previa</div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div style="font-size:9px;color:var(--gray);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;">Resultados</div>
+      <div class="results-grid" style="margin-bottom:1rem;">
+        <div class="result-card">
+          <div class="rc-label">Repago por unidades</div>
+          <div class="rc-value white" id="rc-repago">$0.00</div>
+          <div class="rc-sub" id="rc-repago-sub">velas + encendedores</div>
+        </div>
+        <div class="result-card">
+          <div class="rc-label">Fondo materia prima</div>
+          <div class="rc-value gold" id="rc-fondo">$0.00</div>
+          <div class="rc-sub" id="rc-fondo-sub">payouts × % MP</div>
+        </div>
+        <div class="result-card">
+          <div class="rc-label">Pendiente anterior</div>
+          <div class="rc-value amber" id="rc-pend-ant">$0.00</div>
+          <div class="rc-sub">arrastrado de semana previa</div>
+        </div>
+        <div class="result-card">
+          <div class="rc-label">Total a cubrir</div>
+          <div class="rc-value white" id="rc-total-cubrir">$0.00</div>
+          <div class="rc-sub">repago + pendiente anterior</div>
+        </div>
+      </div>
+      <div class="main-result" id="linea-main-result">
+        <div class="main-label">Transferencia recomendada a la línea</div>
+        <div class="main-amount" id="linea-main-amount">$0.00</div>
+        <div class="main-sub" id="linea-main-sub">MIN(total a cubrir, fondo materia prima)</div>
+      </div>
+      <div class="results-grid" style="margin-bottom:1.25rem;">
+        <div class="result-card" id="card-sobrante">
+          <div class="rc-label">Sobrante materia prima</div>
+          <div class="rc-value green" id="rc-sobrante">$0.00</div>
+          <div class="rc-sub">fondo MP - transferencia</div>
+        </div>
+        <div class="result-card" id="card-pend-nuevo">
+          <div class="rc-label">Nuevo pendiente próx. semana</div>
+          <div class="rc-value amber" id="rc-pend-nuevo">$0.00</div>
+          <div class="rc-sub">total a cubrir - transferencia</div>
+        </div>
+        <div class="result-card">
+          <div class="rc-label">Nuevo saldo de la línea</div>
+          <div class="rc-value red" id="rc-nuevo-saldo">—</div>
+          <div class="rc-sub">después del abono</div>
+        </div>
+        <div class="result-card">
+          <div class="rc-label">% completado línea</div>
+          <div class="rc-value green" id="rc-pct-linea">0.0%</div>
+          <div class="rc-sub">después del abono</div>
+        </div>
+      </div>
+      <button class="btn" id="btn-linea" onclick="registrarLinea()" disabled>Registrar abono de esta semana</button>
+    </div>
+    <div class="sec-title">Historial de abonos</div>
+    <div id="hist-linea"><div class="hist-empty">Aún no hay abonos registrados.</div></div>
+    <div style="text-align:center;margin-top:1.5rem;">
+      <button class="btn-reset" onclick="resetLinea()">Resetear línea de crédito</button>
+    </div>
+  </div>
+
+  <!-- TAB 3: RESUMEN DEL MES -->
+  <div class="tab-content" id="tab-resumen">
+    <div class="sec-title">Resumen del mes</div>
+    <div class="resumen-grid">
+      <div class="stat-card" style="background:var(--navy-mid);border:1px solid var(--border);border-radius:10px;">
+        <span class="stat-label">Meta del mes</span>
+        <div class="stat-value gold" id="res-meta">$35,000</div>
+        <div class="stat-sub" id="res-mes-nombre">—</div>
+      </div>
+      <div class="stat-card" style="background:var(--navy-mid);border:1px solid var(--border);border-radius:10px;">
+        <span class="stat-label">Payouts recibidos</span>
+        <div class="stat-value green" id="res-payouts-total">$0.00</div>
+        <div class="stat-sub" id="res-payouts-count">0 depósitos</div>
+      </div>
+      <div class="stat-card" style="background:var(--navy-mid);border:1px solid var(--border);border-radius:10px;">
+        <span class="stat-label">Progreso vs meta</span>
+        <div class="stat-value amber" id="res-progreso-pct">0%</div>
+        <div class="stat-sub" id="res-falta">faltan $35,000</div>
+      </div>
+      <div class="stat-card" style="background:var(--navy-mid);border:1px solid var(--border);border-radius:10px;">
+        <span class="stat-label">Abonado a línea</span>
+        <div class="stat-value green" id="res-linea-total">$0.00</div>
+        <div class="stat-sub" id="res-linea-semanas">0 semanas</div>
+      </div>
+    </div>
+    <div class="prog-meta">
+      <span>$0</span>
+      <span id="res-prog-label">0% de la meta</span>
+      <span id="res-meta-label">$35,000</span>
+    </div>
+    <div class="prog-track">
+      <div class="prog-fill" id="res-prog-bar" style="background:linear-gradient(90deg,var(--purple),var(--gold));"></div>
+    </div>
+    <div class="sec-title">Distribución acumulada del mes</div>
+    <table class="dist-table">
+      <thead><tr><th>Categoría</th><th>%</th><th>Total distribuido</th></tr></thead>
+      <tbody id="res-categorias"></tbody>
+    </table>
+    <div class="sec-title" style="margin-top:1.5rem;">Payouts del mes</div>
+    <div id="res-hist-payouts"><div class="hist-empty">No hay payouts registrados este mes.</div></div>
+  </div>
+
+  <div class="footer" style="margin-top:2rem;">
+    ENZIENDELA CANDLE CO. &nbsp;·&nbsp; DASHBOARD FINANCIERO &nbsp;·&nbsp; DISTRIBUCIÓN · LÍNEA DE CRÉDITO · RESUMEN
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL RECORDATORIO LÍNEA DE CRÉDITO -->
+<!-- ============================================================ -->
+<div id="linea-recordatorio-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:3000;align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:var(--navy-mid);border:2px solid var(--gold);border-radius:20px;padding:2.5rem 2rem;width:90%;max-width:420px;text-align:center;animation:slideIn 0.35s ease;">
+    <div style="font-size:3rem;margin-bottom:1rem;">🕯️</div>
+    <div style="font-family:'DM Serif Display',serif;font-size:1.8rem;color:var(--gold-light);margin-bottom:0.75rem;line-height:1.2;">
+      Antes de irte...
+    </div>
+    <div style="font-size:13px;color:var(--white);line-height:1.8;margin-bottom:0.75rem;">
+      Recuerda pagar la <strong style="color:var(--gold-light);">línea de crédito</strong><br>
+      con el <strong style="color:var(--green);">34% de materia prima</strong><br>
+      correspondiente a este depósito.
+    </div>
+    <div style="background:var(--navy);border-radius:10px;padding:1rem;margin:1.25rem 0;">
+      <div style="font-size:9px;color:var(--gray);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Saldo pendiente línea de crédito</div>
+      <div id="linea-recordatorio-monto" style="font-family:'DM Serif Display',serif;font-size:2.2rem;color:var(--red);line-height:1;"></div>
+      <div id="linea-recordatorio-mp" style="font-size:11px;color:var(--green);margin-top:6px;"></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:0.5rem;">
+      <button onclick="irALinea()" style="flex:2;background:var(--gold);color:var(--navy);border:none;border-radius:10px;padding:14px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;font-weight:600;">
+        Ir a Línea de Crédito →
+      </button>
+      <button onclick="document.getElementById('linea-recordatorio-modal').style.display='none'" style="flex:1;background:transparent;border:1px solid var(--border);color:var(--gray);border-radius:10px;padding:14px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;">
+        Ya pagué
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CATEGORIAS_DEFAULT = [
+  { nombre: 'Materia prima / COGS',      pct: 36 },
+  { nombre: 'Nómina Luis Daniel',         pct: 18 },
+  { nombre: 'Nómina Luis Gabriel',        pct: 4  },
+  { nombre: 'VA Digital (Veronica)',       pct: 5  },
+  { nombre: 'Marketing',                  pct: 18 },
+  { nombre: 'Suscripciones / operativos', pct: 4  },
+  { nombre: 'Pago préstamo',              pct: 2  },
+  { nombre: 'FedEx',                      pct: 7  },
+  { nombre: 'Reserva & ganancias',        pct: 6  },
+];
+
+let TASA_VELA   = 2.38;
+let TASA_ENC    = 3.62;
+let DEUDA_TOTAL = 17618;
+let lineaPagado = 0;
+let lineaSemana = 1;
+let histDist    = [];
+let histLinea   = [];
+let acumPayoutsSemana = 0;
+let payoutsUsados = [];
+
+function showTab(id) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (id === 'resumen') updateResumen();
+}
+
+function fmt(n) {
+  return '$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function today() {
+  return new Date().toLocaleDateString('es-PR', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+let modoActual = 'auto';
+
+function setModo(modo) {
+  modoActual = modo;
+  const btnAuto   = document.getElementById('btn-modo-auto');
+  const btnManual = document.getElementById('btn-modo-manual');
+  const hint      = document.getElementById('modo-hint');
+  const indicator = document.getElementById('manual-indicator');
+  const thPct     = document.getElementById('th-pct');
+  if (modo === 'auto') {
+    btnAuto.style.background   = 'var(--gold)';
+    btnAuto.style.color        = 'var(--navy)';
+    btnManual.style.background = 'transparent';
+    btnManual.style.color      = 'var(--gray)';
+    hint.textContent = 'Los montos se calculan según el %';
+    indicator.style.display = 'none';
+    thPct.style.display = '';
+    calcDist();
+  } else {
+    btnManual.style.background = 'var(--gold)';
+    btnManual.style.color      = 'var(--navy)';
+    btnAuto.style.background   = 'transparent';
+    btnAuto.style.color        = 'var(--gray)';
+    hint.textContent = 'Ingresa el monto de cada categoría libremente';
+    indicator.style.display = 'block';
+    thPct.style.display = 'none';
+    CATEGORIAS_DEFAULT.forEach((_, i) => {
+      const input = document.getElementById('monto-manual-' + i);
+      if (input) input.value = '';
+    });
+    calcManual();
+  }
+  buildDistTable();
+}
+
+let pctGuardados = CATEGORIAS_DEFAULT.map(c => c.pct);
+
+function buildDistTable() {
+  CATEGORIAS_DEFAULT.forEach((_, i) => {
+    const input = document.getElementById('pct-' + i);
+    if (input) pctGuardados[i] = parseFloat(input.value) || CATEGORIAS_DEFAULT[i].pct;
+  });
+  const tbody = document.getElementById('dist-body');
+  tbody.innerHTML = '';
+  CATEGORIAS_DEFAULT.forEach((cat, i) => {
+    const tr = document.createElement('tr');
+    if (modoActual === 'auto') {
+      tr.innerHTML = `
+        <td>${cat.nombre}</td>
+        <td><input class="pct-input" type="number" id="pct-${i}" value="${pctGuardados[i]}" min="0" max="100" oninput="calcDist()" /></td>
+        <td id="monto-${i}">$0.00</td>
+        <td>
+          <div class="check-wrap">
+            <input type="checkbox" id="chk-${i}" onchange="updateChk(${i})" />
+            <label class="check-label" id="chk-label-${i}" for="chk-${i}">pendiente</label>
+          </div>
+        </td>
+      `;
+    } else {
+      tr.innerHTML = `
+        <td>${cat.nombre}</td>
+        <td style="display:none;"></td>
+        <td>
+          <input type="number" id="monto-manual-${i}" placeholder="0.00" min="0" step="0.01"
+            style="width:110px;background:var(--navy);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-family:'DM Mono',monospace;font-size:12px;color:var(--white);text-align:right;outline:none;-moz-appearance:textfield;"
+            oninput="calcManual()" />
+        </td>
+        <td>
+          <div class="check-wrap">
+            <input type="checkbox" id="chk-${i}" onchange="updateChk(${i})" />
+            <label class="check-label" id="chk-label-${i}" for="chk-${i}">pendiente</label>
+          </div>
+        </td>
+      `;
+    }
+    tbody.appendChild(tr);
+  });
+  if (modoActual === 'auto') calcDist();
+  else calcManual();
+}
+
+function calcManual() {
+  const monto = parseFloat(document.getElementById('payout-monto').value) || 0;
+  let totalAsignado = 0;
+  CATEGORIAS_DEFAULT.forEach((_, i) => {
+    const input = document.getElementById('monto-manual-' + i);
+    totalAsignado += parseFloat(input?.value || 0);
+  });
+  const restante = monto - totalAsignado;
+  const pct = monto > 0 ? Math.min((totalAsignado / monto) * 100, 100) : 0;
+  document.getElementById('manual-asignado').textContent = fmt(totalAsignado);
+  document.getElementById('manual-restante').textContent = restante >= 0 ? `Disponible: ${fmt(restante)}` : `⚠ Excedido: ${fmt(Math.abs(restante))}`;
+  document.getElementById('manual-restante').style.color = restante >= 0 ? 'var(--gray)' : 'var(--red)';
+  document.getElementById('manual-barra-fill').style.width = pct + '%';
+  document.getElementById('manual-barra-fill').style.background = restante < 0 ? 'var(--red)' : 'var(--amber)';
+  document.getElementById('total-monto').textContent = fmt(totalAsignado);
+  document.getElementById('btn-dist').disabled = monto <= 0 || totalAsignado <= 0;
+}
+
+// *** FUNCIÓN MODIFICADA — dispara el pop-up al marcar Reserva & ganancias ***
+function updateChk(i) {
+  const chk = document.getElementById('chk-' + i);
+  const lbl = document.getElementById('chk-label-' + i);
+  lbl.textContent = chk.checked ? 'pagado' : 'pendiente';
+  lbl.className   = 'check-label' + (chk.checked ? ' paid' : '');
+
+  // Si es el último checkbox (Reserva & ganancias) y se marcó como pagado
+  if (i === CATEGORIAS_DEFAULT.length - 1 && chk.checked) {
+    setTimeout(() => {
+      const saldo = Math.max(DEUDA_TOTAL - lineaPagado, 0);
+      const monto = parseFloat(document.getElementById('payout-monto').value) || 0;
+      const pctMP = parseFloat(document.getElementById('linea-pct-mp').value) || 34;
+      const fondoMP = monto * (pctMP / 100);
+
+      document.getElementById('linea-recordatorio-monto').textContent = fmt(saldo);
+      document.getElementById('linea-recordatorio-mp').textContent =
+        monto > 0 ? `34% de este depósito = ${fmt(fondoMP)} disponible para abonar` : '';
+
+      document.getElementById('linea-recordatorio-modal').style.display = 'flex';
+    }, 350);
+  }
+}
+
+function irALinea() {
+  document.getElementById('linea-recordatorio-modal').style.display = 'none';
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-linea').classList.add('active');
+  document.querySelectorAll('.tab')[1].classList.add('active');
+  setTimeout(() => {
+    document.getElementById('tab-linea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
+}
+
+function calcDist() {
+  const monto = parseFloat(document.getElementById('payout-monto').value) || 0;
+  let totalPct = 0;
+  let totalMonto = 0;
+  CATEGORIAS_DEFAULT.forEach((_, i) => {
+    const pct  = parseFloat(document.getElementById('pct-' + i).value) || 0;
+    const asig = monto * (pct / 100);
+    totalPct   += pct;
+    totalMonto += asig;
+    document.getElementById('monto-' + i).textContent = fmt(asig);
+  });
+  document.getElementById('total-pct').textContent  = totalPct;
+  document.getElementById('total-monto').textContent = fmt(totalMonto);
+  document.getElementById('dist-total').textContent  = fmt(monto);
+  document.getElementById('dist-sub').textContent    = totalPct === 100 ? `${CATEGORIAS_DEFAULT.length} categorías · 100%` : `⚠ Los porcentajes suman ${totalPct}% (deben sumar 100%)`;
+  document.getElementById('btn-dist').disabled       = monto <= 0;
+}
+
+function registrarDist() {
+  const monto = parseFloat(document.getElementById('payout-monto').value) || 0;
+  const fecha = document.getElementById('payout-fecha').value || today();
+  const mes   = document.getElementById('nombre-mes').value || 'Sin especificar';
+  if (monto <= 0) return;
+  let distribs;
+  if (modoActual === 'manual') {
+    distribs = CATEGORIAS_DEFAULT.map((cat, i) => {
+      const montoManual = parseFloat(document.getElementById('monto-manual-' + i)?.value) || 0;
+      const pct = monto > 0 ? (montoManual / monto * 100) : 0;
+      return { nombre: cat.nombre, pct: Math.round(pct), monto: montoManual };
+    });
+  } else {
+    distribs = CATEGORIAS_DEFAULT.map((cat, i) => {
+      const pct = parseFloat(document.getElementById('pct-' + i).value) || 0;
+      return { nombre: cat.nombre, pct, monto: monto * (pct / 100) };
+    });
+  }
+  const item = { monto, fecha, mes, distribs, timestamp: Date.now() };
+  histDist.unshift(item);
+  renderHistDist(item);
+  acumPayoutsSemana += monto;
+  document.getElementById('linea-payouts').value = acumPayoutsSemana.toFixed(2);
+  updatePayoutBadge();
+  calcLinea();
+  saveAll();
+  updateResumen();
+  document.getElementById('payout-monto').value = '';
+  document.getElementById('payout-fecha').value = '';
+  document.querySelectorAll('.pct-input').forEach((el, i) => {
+    const chk = document.getElementById('chk-' + i);
+    if (chk) { chk.checked = false; updateChk(i); }
+  });
+  calcDist();
+}
+
+function renderHistDist(item) {
+  const hist  = document.getElementById('hist-dist');
+  const empty = hist.querySelector('.hist-empty');
+  if (empty) empty.remove();
+  const el = document.createElement('div');
+  el.className = 'hist-item';
+  const rows = item.distribs.map(d =>
+    `<div class="hist-detail"><div class="hist-detail-label">${d.nombre}</div><div class="hist-detail-value">${fmt(d.monto)}</div></div>`
+  ).join('');
+  el.innerHTML = `
+    <div class="hist-header">
+      <span class="hist-date">${item.fecha} &nbsp;·&nbsp; ${item.mes}</span>
+      <span class="hist-main gold">${fmt(item.monto)}</span>
+    </div>
+    <div class="hist-details">${rows}</div>
+  `;
+  hist.insertBefore(el, hist.firstChild);
+}
+
+function resetDist() {
+  if (!confirm('¿Borrar todo el historial de payouts?')) return;
+  histDist = [];
+  document.getElementById('hist-dist').innerHTML = '<div class="hist-empty">Aún no hay payouts registrados.</div>';
+  saveAll();
+  updateResumen();
+}
+
+function updateLinea() {
+  TASA_VELA   = parseFloat(document.getElementById('cfg-tasa-vela').value) || 2.38;
+  TASA_ENC    = parseFloat(document.getElementById('cfg-tasa-enc').value)  || 3.62;
+  DEUDA_TOTAL = parseFloat(document.getElementById('cfg-deuda').value)     || 7780;
+  lineaPagado = parseFloat(document.getElementById('cfg-pagado').value)    || 0;
+  document.getElementById('display-tasa-vela').innerHTML = '$' + TASA_VELA.toFixed(2) + '<span>por vela vendida</span>';
+  document.getElementById('display-tasa-enc').innerHTML  = '$' + TASA_ENC.toFixed(2)  + '<span>por encendedor vendido</span>';
+  document.getElementById('hint-velas').textContent = 'velas × $' + TASA_VELA.toFixed(2);
+  document.getElementById('hint-enc').textContent   = 'encendedores × $' + TASA_ENC.toFixed(2);
+  document.getElementById('linea-deuda-label').textContent = fmt(DEUDA_TOTAL);
+  document.getElementById('linea-deuda-display').textContent = fmt(DEUDA_TOTAL);
+  updateLineaDisplays();
+  calcLinea();
+}
+
+function calcLinea() {
+  const velas   = parseFloat(document.getElementById('velas-input').value)    || 0;
+  const enc     = parseFloat(document.getElementById('enc-input').value)       || 0;
+  const payouts = parseFloat(document.getElementById('linea-payouts').value)   || 0;
+  const pctMP   = parseFloat(document.getElementById('linea-pct-mp').value)   || 34;
+  const pendAnt = parseFloat(document.getElementById('linea-pendiente').value) || 0;
+  const repago      = (velas * TASA_VELA) + (enc * TASA_ENC);
+  const fondoMP     = payouts * (pctMP / 100);
+  const totalCubrir = repago + pendAnt;
+  const transf      = Math.min(totalCubrir, fondoMP);
+  const sobrante    = Math.max(0, fondoMP - transf);
+  const pendNuevo   = Math.max(0, totalCubrir - transf);
+  const saldoActual = Math.max(DEUDA_TOTAL - lineaPagado, 0);
+  const nuevoSaldo  = Math.max(saldoActual - transf, 0);
+  const pctLinea    = Math.min(((lineaPagado + transf) / DEUDA_TOTAL) * 100, 100);
+  document.getElementById('rc-repago').textContent       = fmt(repago);
+  document.getElementById('rc-repago-sub').textContent   = `${velas} velas + ${enc} enc`;
+  document.getElementById('rc-fondo').textContent        = fmt(fondoMP);
+  document.getElementById('rc-fondo-sub').textContent    = `$${payouts.toFixed(2)} × ${pctMP}%`;
+  document.getElementById('rc-pend-ant').textContent     = fmt(pendAnt);
+  document.getElementById('rc-total-cubrir').textContent = fmt(totalCubrir);
+  document.getElementById('linea-main-amount').textContent = fmt(transf);
+  document.getElementById('rc-sobrante').textContent     = fmt(sobrante);
+  document.getElementById('rc-pend-nuevo').textContent   = fmt(pendNuevo);
+  document.getElementById('rc-nuevo-saldo').textContent  = fmt(nuevoSaldo);
+  document.getElementById('rc-pct-linea').textContent    = pctLinea.toFixed(1) + '%';
+  document.getElementById('card-sobrante').className  = 'result-card' + (sobrante > 0 ? ' highlight' : '');
+  document.getElementById('card-pend-nuevo').className = 'result-card' + (pendNuevo > 0 ? ' warn' : '');
+  let sub = '';
+  if (totalCubrir === 0) sub = 'Ingresa unidades vendidas y payouts';
+  else if (fondoMP >= totalCubrir) sub = `Fondo MP cubre el total — sobrante ${fmt(sobrante)}`;
+  else sub = `Limitado por fondo MP — quedan ${fmt(pendNuevo)} pendientes`;
+  document.getElementById('linea-main-sub').textContent = sub;
+  const hasData = (velas > 0 || enc > 0) && payouts > 0;
+  document.getElementById('btn-linea').disabled = !hasData;
+  document.getElementById('linea-main-result').classList.toggle('active', hasData);
+}
+
+function registrarLinea() {
+  const velas   = parseFloat(document.getElementById('velas-input').value)    || 0;
+  const enc     = parseFloat(document.getElementById('enc-input').value)       || 0;
+  const payouts = parseFloat(document.getElementById('linea-payouts').value)   || 0;
+  const pctMP   = parseFloat(document.getElementById('linea-pct-mp').value)   || 34;
+  const pendAnt = parseFloat(document.getElementById('linea-pendiente').value) || 0;
+  if (velas === 0 && enc === 0 && payouts === 0) return;
+  const repago      = (velas * TASA_VELA) + (enc * TASA_ENC);
+  const fondoMP     = payouts * (pctMP / 100);
+  const totalCubrir = repago + pendAnt;
+  const transf      = Math.min(totalCubrir, fondoMP);
+  const sobrante    = Math.max(0, fondoMP - transf);
+  const pendNuevo   = Math.max(0, totalCubrir - transf);
+  lineaPagado = Math.min(lineaPagado + transf, DEUDA_TOTAL);
+  document.getElementById('cfg-pagado').value = lineaPagado.toFixed(2);
+  const saldoRestante = Math.max(DEUDA_TOTAL - lineaPagado, 0);
+  const fechaDesde = document.getElementById('linea-fecha-desde').value || '';
+  const fechaHasta = document.getElementById('linea-fecha-hasta').value || '';
+  const periodoLabel = fechaDesde && fechaHasta
+    ? `${new Date(fechaDesde+'T12:00:00').toLocaleDateString('es-PR',{month:'short',day:'numeric'})} — ${new Date(fechaHasta+'T12:00:00').toLocaleDateString('es-PR',{month:'short',day:'numeric'})}`
+    : '';
+  const item = { num: lineaSemana++, fecha: today(), fechaDesde, fechaHasta, periodoLabel, velas, enc, payouts, pctMP, fondoMP, repago, pendAnt, transf, sobrante, pendNuevo, saldoRestante, lineaPagado };
+  histLinea.unshift(item);
+  renderHistLinea(item);
+  updateLineaDisplays();
+  saveAll();
+  updateResumen();
+  document.getElementById('linea-pendiente').value = pendNuevo > 0 ? pendNuevo.toFixed(2) : '';
+  document.getElementById('velas-input').value  = '';
+  document.getElementById('enc-input').value    = '';
+  document.getElementById('linea-payouts').value = '';
+  document.getElementById('linea-fecha-desde').value = '';
+  document.getElementById('linea-fecha-hasta').value = '';
+  acumPayoutsSemana = 0;
+  updatePayoutBadge();
+  document.getElementById('btn-linea').disabled = true;
+  document.getElementById('linea-main-result').classList.remove('active');
+  calcLinea();
+  if (lineaPagado >= DEUDA_TOTAL) {
+    document.getElementById('saldado-msg').classList.add('show');
+    document.getElementById('saldado-msg').scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+function renderHistLinea(item) {
+  const hist  = document.getElementById('hist-linea');
+  const empty = hist.querySelector('.hist-empty');
+  if (empty) empty.remove();
+  const el = document.createElement('div');
+  el.className = 'hist-item';
+  el.innerHTML = `
+    <div class="hist-header">
+      <span class="hist-date">Semana ${item.num} &nbsp;·&nbsp; ${item.fecha}${item.periodoLabel ? ' &nbsp;·&nbsp; Ventas: ' + item.periodoLabel : ''}</span>
+      <span class="hist-main green">${fmt(item.transf)}</span>
+    </div>
+    <div class="hist-details">
+      <div class="hist-detail"><div class="hist-detail-label">Payouts</div><div class="hist-detail-value">${fmt(item.payouts)}</div></div>
+      <div class="hist-detail"><div class="hist-detail-label">Fondo MP (${item.pctMP}%)</div><div class="hist-detail-value amber">${fmt(item.fondoMP)}</div></div>
+      <div class="hist-detail"><div class="hist-detail-label">Unidades</div><div class="hist-detail-value">${item.velas} velas · ${item.enc} enc</div></div>
+      <div class="hist-detail"><div class="hist-detail-label">Repago calc.</div><div class="hist-detail-value">${fmt(item.repago)}</div></div>
+      <div class="hist-detail"><div class="hist-detail-label">Pend. anterior</div><div class="hist-detail-value ${item.pendAnt > 0 ? 'amber' : ''}">${fmt(item.pendAnt)}</div></div>
+      <div class="hist-detail"><div class="hist-detail-label">Transferencia</div><div class="hist-detail-value green">${fmt(item.transf)}</div></div>
+      <div class="hist-detail"><div class="hist-detail-label">Pend. nuevo</div><div class="hist-detail-value ${item.pendNuevo > 0 ? 'amber' : 'green'}">${fmt(item.pendNuevo)}</div></div>
+      <div class="hist-detail"><div class="hist-detail-label">Saldo línea</div><div class="hist-detail-value ${item.saldoRestante <= 0 ? 'green' : ''}">${item.saldoRestante <= 0 ? '¡Saldado!' : fmt(item.saldoRestante)}</div></div>
+    </div>
+  `;
+  hist.insertBefore(el, hist.firstChild);
+}
+
+function updateLineaDisplays() {
+  const saldo = Math.max(DEUDA_TOTAL - lineaPagado, 0);
+  const pct   = Math.min((lineaPagado / DEUDA_TOTAL) * 100, 100);
+  const semsReg = lineaSemana - 1;
+  const meses = semsReg > 0 ? (saldo / (lineaPagado / semsReg * 4)).toFixed(1) : '3.8';
+  document.getElementById('linea-pagado-display').textContent = fmt(lineaPagado);
+  document.getElementById('linea-pagado-pct').textContent     = pct.toFixed(1) + '% completado';
+  document.getElementById('linea-saldo-display').textContent  = fmt(saldo);
+  document.getElementById('linea-prog-bar').style.width       = pct + '%';
+  document.getElementById('linea-prog-label').textContent     = pct.toFixed(1) + '% pagado';
+  document.getElementById('linea-meses').textContent          = saldo <= 0 ? '¡Línea saldada!' : '~' + meses + ' meses a ritmo actual';
+  if (saldo <= 0) document.getElementById('linea-saldo-display').style.color = 'var(--green)';
+}
+
+function resetLinea() {
+  if (!confirm('¿Borrar todo el historial de la línea de crédito?')) return;
+  histLinea = [];
+  lineaPagado = 0;
+  lineaSemana = 1;
+  document.getElementById('cfg-pagado').value = 0;
+  document.getElementById('hist-linea').innerHTML = '<div class="hist-empty">Aún no hay abonos registrados.</div>';
+  document.getElementById('saldado-msg').classList.remove('show');
+  document.getElementById('linea-saldo-display').style.color = 'var(--red)';
+  updateLineaDisplays();
+  saveAll();
+  updateResumen();
+}
+
+function updateResumen() {
+  const meta      = parseFloat(document.getElementById('meta-mes').value) || 35000;
+  const mesNombre = document.getElementById('nombre-mes').value || '—';
+  const totalPay  = histDist.reduce((s, d) => s + d.monto, 0);
+  const totalLinea = histLinea.reduce((s, l) => s + l.transf, 0);
+  const pctMeta   = Math.min((totalPay / meta) * 100, 100);
+  const falta     = Math.max(meta - totalPay, 0);
+  document.getElementById('res-meta').textContent          = fmt(meta);
+  document.getElementById('res-mes-nombre').textContent    = mesNombre;
+  document.getElementById('res-payouts-total').textContent = fmt(totalPay);
+  document.getElementById('res-payouts-count').textContent = histDist.length + ' depósitos';
+  document.getElementById('res-progreso-pct').textContent  = pctMeta.toFixed(1) + '%';
+  document.getElementById('res-falta').textContent         = falta > 0 ? `faltan ${fmt(falta)}` : '¡Meta alcanzada!';
+  document.getElementById('res-linea-total').textContent   = fmt(totalLinea);
+  document.getElementById('res-linea-semanas').textContent = (lineaSemana - 1) + ' semanas';
+  document.getElementById('res-prog-bar').style.width      = pctMeta + '%';
+  document.getElementById('res-prog-label').textContent    = pctMeta.toFixed(1) + '% de la meta';
+  document.getElementById('res-meta-label').textContent    = fmt(meta);
+  const totalesCat = {};
+  CATEGORIAS_DEFAULT.forEach(c => { totalesCat[c.nombre] = 0; });
+  histDist.forEach(d => { d.distribs.forEach(di => { if (totalesCat[di.nombre] !== undefined) totalesCat[di.nombre] += di.monto; }); });
+  const tbody = document.getElementById('res-categorias');
+  tbody.innerHTML = '';
+  CATEGORIAS_DEFAULT.forEach(cat => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${cat.nombre}</td>
+      <td style="text-align:center;color:var(--gold-light);">${cat.pct}%</td>
+      <td style="text-align:right;font-family:'DM Serif Display',serif;font-size:1.1rem;">${fmt(totalesCat[cat.nombre] || 0)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  const resHist = document.getElementById('res-hist-payouts');
+  resHist.innerHTML = '';
+  if (histDist.length === 0) {
+    resHist.innerHTML = '<div class="hist-empty">No hay payouts registrados este mes.</div>';
+  } else {
+    histDist.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'hist-item';
+      el.innerHTML = `<div class="hist-header"><span class="hist-date">${item.fecha} &nbsp;·&nbsp; ${item.mes}</span><span class="hist-main gold">${fmt(item.monto)}</span></div>`;
+      resHist.appendChild(el);
+    });
+  }
+}
+
+function updatePayoutBadge() {
+  const badge = document.getElementById('payout-badge');
+  if (acumPayoutsSemana > 0) {
+    badge.style.display = 'flex';
+    document.getElementById('payout-badge-text').textContent =
+      'Auto desde distribución: $' + acumPayoutsSemana.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function resetAcumPayouts() {
+  acumPayoutsSemana = 0;
+  document.getElementById('linea-payouts').value = '';
+  updatePayoutBadge();
+  calcLinea();
+}
+
+function abrirConfigModal() {
+  document.getElementById('modal-deuda').value  = DEUDA_TOTAL;
+  document.getElementById('modal-pagado').value = lineaPagado;
+  document.getElementById('modal-vela').value   = TASA_VELA;
+  document.getElementById('modal-enc').value    = TASA_ENC;
+  updateModalPreview();
+  const modal = document.getElementById('config-modal');
+  modal.style.display = 'flex';
+  document.getElementById('modal-deuda').addEventListener('input', updateModalPreview);
+  document.getElementById('modal-pagado').addEventListener('input', updateModalPreview);
+}
+
+function updateModalPreview() {
+  const deuda  = parseFloat(document.getElementById('modal-deuda').value)  || 0;
+  const pagado = parseFloat(document.getElementById('modal-pagado').value) || 0;
+  const saldo  = Math.max(deuda - pagado, 0);
+  document.getElementById('modal-saldo-preview').textContent = fmt(saldo);
+  document.getElementById('modal-saldo-preview').style.color = saldo > 0 ? 'var(--red)' : 'var(--green)';
+}
+
+function cerrarConfigModal() {
+  document.getElementById('config-modal').style.display = 'none';
+}
+
+function guardarConfig() {
+  DEUDA_TOTAL  = parseFloat(document.getElementById('modal-deuda').value)  || DEUDA_TOTAL;
+  lineaPagado  = parseFloat(document.getElementById('modal-pagado').value) || 0;
+  TASA_VELA    = parseFloat(document.getElementById('modal-vela').value)   || TASA_VELA;
+  TASA_ENC     = parseFloat(document.getElementById('modal-enc').value)    || TASA_ENC;
+  document.getElementById('cfg-deuda').value     = DEUDA_TOTAL;
+  document.getElementById('cfg-pagado').value    = lineaPagado;
+  document.getElementById('cfg-tasa-vela').value = TASA_VELA;
+  document.getElementById('cfg-tasa-enc').value  = TASA_ENC;
+  document.getElementById('display-cfg-deuda').textContent  = fmt(DEUDA_TOTAL);
+  document.getElementById('display-cfg-pagado').textContent = fmt(lineaPagado);
+  document.getElementById('display-cfg-vela').textContent   = '$' + TASA_VELA.toFixed(2);
+  document.getElementById('display-cfg-enc').textContent    = '$' + TASA_ENC.toFixed(2);
+  document.getElementById('display-tasa-vela').innerHTML = '$' + TASA_VELA.toFixed(2) + '<span>por vela vendida</span>';
+  document.getElementById('display-tasa-enc').innerHTML  = '$' + TASA_ENC.toFixed(2)  + '<span>por encendedor vendido</span>';
+  document.getElementById('hint-velas').textContent = 'velas × $' + TASA_VELA.toFixed(2);
+  document.getElementById('hint-enc').textContent   = 'encendedores × $' + TASA_ENC.toFixed(2);
+  document.getElementById('linea-deuda-label').textContent    = fmt(DEUDA_TOTAL);
+  document.getElementById('linea-deuda-display').textContent  = fmt(DEUDA_TOTAL);
+  updateLineaDisplays();
+  calcLinea();
+  saveAll();
+  cerrarConfigModal();
+}
+
+function saveAll() {
+  try {
+    localStorage.setItem('enziendela_dash_v1', JSON.stringify({
+      histDist, histLinea, lineaPagado, lineaSemana,
+      TASA_VELA, TASA_ENC, DEUDA_TOTAL, acumPayoutsSemana, payoutsUsados
+    }));
+  } catch(e) {}
+}
+
+function loadAll() {
+  try {
+    const saved = localStorage.getItem('enziendela_dash_v1');
+    if (!saved) return;
+    const data = JSON.parse(saved);
+    histDist    = data.histDist    || [];
+    histLinea   = data.histLinea   || [];
+    lineaPagado = data.lineaPagado || 0;
+    lineaSemana = data.lineaSemana || 1;
+    if (data.TASA_VELA)   { TASA_VELA = data.TASA_VELA; document.getElementById('cfg-tasa-vela').value = TASA_VELA; }
+    if (data.TASA_ENC)    { TASA_ENC  = data.TASA_ENC;  document.getElementById('cfg-tasa-enc').value  = TASA_ENC;  }
+    if (data.DEUDA_TOTAL) { DEUDA_TOTAL = data.DEUDA_TOTAL; document.getElementById('cfg-deuda').value = DEUDA_TOTAL; }
+    if (data.acumPayoutsSemana) {
+      acumPayoutsSemana = data.acumPayoutsSemana;
+      document.getElementById('linea-payouts').value = acumPayoutsSemana > 0 ? acumPayoutsSemana.toFixed(2) : '';
+      updatePayoutBadge();
+    }
+    if (data.payoutsUsados) payoutsUsados = data.payoutsUsados;
+    if (document.getElementById('display-cfg-deuda')) {
+      document.getElementById('display-cfg-deuda').textContent  = fmt(DEUDA_TOTAL);
+      document.getElementById('display-cfg-pagado').textContent = fmt(lineaPagado);
+      document.getElementById('display-cfg-vela').textContent   = '$' + TASA_VELA.toFixed(2);
+      document.getElementById('display-cfg-enc').textContent    = '$' + TASA_ENC.toFixed(2);
+    }
+    document.getElementById('cfg-pagado').value = lineaPagado;
+    histDist.slice().reverse().forEach(item => renderHistDist(item));
+    histLinea.slice().reverse().forEach(item => renderHistLinea(item));
+    updateLineaDisplays();
+    updateResumen();
+  } catch(e) {}
+}
+
+let mercuryPayouts = [];
+
+async function syncMercury() {
+  const btn
